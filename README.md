@@ -1,7 +1,7 @@
 
-  # enLead 5.0
+  # enLead fe
 
-  This is a code bundle for enLead 5.0. Designed by Navaneeth Sankar K P, For Utkarsh Umang. 
+  The FE code for our lead database management system
 
   ## Running the code
 
