@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, Plus, Database, Menu, Home } from 'lucide-react';
 import { Sidebar } from './Sidebar';
+import { Auth } from './Auth';
 import { AnimatedCounter } from './AnimatedCounter';
 import { MiniGraph } from './MiniGraph';
 import { ProfileOverlay } from './ProfileOverlay';
@@ -129,6 +130,7 @@ export function DashboardPage() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const profileRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
 
@@ -171,7 +173,7 @@ export function DashboardPage() {
     <div className="flex h-screen bg-[#0A1628] noise-texture">
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
-        <Sidebar isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} />
+        <Sidebar isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} onAuthClick={() => setIsAuthOpen(true)} />
       </div>
 
       {/* Mobile Sidebar */}
@@ -183,10 +185,11 @@ export function DashboardPage() {
           transition={{ type: 'spring', damping: 25 }}
           className="lg:hidden fixed inset-y-0 left-0 z-50"
         >
-          <Sidebar 
-            isCollapsed={false} 
+          <Sidebar
+            isCollapsed={false}
             onToggleCollapse={() => setIsMobileMenuOpen(false)}
             isMobileMenu={true}
+            onAuthClick={() => { setIsMobileMenuOpen(false); setIsAuthOpen(true); }}
             onNotificationClick={() => {
               setIsMobileMenuOpen(false);
               setIsNotificationsOpen(true);
@@ -647,6 +650,8 @@ export function DashboardPage() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
       />
+
+      <Auth isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
 
       {/* Bioluminescent Text Effect */}
       <style>{`
