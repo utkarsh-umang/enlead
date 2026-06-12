@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, LogOut, Home, Bell, LogIn, UserPlus } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import profileImage from 'figma:asset/3a29a51f6305397b330790f22be462da5a70d304.png';
@@ -20,8 +20,6 @@ export function Sidebar({ isCollapsed, onToggleCollapse, onNotificationClick, on
   const location = useLocation();
   const [isProfileExpanded, setIsProfileExpanded] = useState(false);
   const { user, logout } = useAuth();
-
-  const menuItems: never[] = [];
 
   const handleSignOut = () => {
     logout();
@@ -101,49 +99,6 @@ export function Sidebar({ isCollapsed, onToggleCollapse, onNotificationClick, on
 
       {/* Menu Items */}
       <nav className="flex-1 px-3 py-6 space-y-2">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-
-          return (
-            <motion.button
-              key={item.name}
-              onClick={() => navigate(item.path)}
-              whileHover={{
-                scale: 1.02,
-                x: isCollapsed ? 0 : 4,
-                boxShadow: isActive ? 'none' : '0 0 20px rgba(0, 217, 255, 0.3)',
-              }}
-              whileTap={{ scale: 0.98 }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-                isActive
-                  ? 'bg-[#00D9FF]/20 text-[#00D9FF] shadow-lg shadow-[#00D9FF]/20 border border-[#00D9FF]/40'
-                  : 'text-white/70 hover:text-white hover:bg-[#00D9FF]/10'
-              } ${isCollapsed ? 'justify-center' : ''}`}
-            >
-              <Icon className="size-5" />
-              <AnimatePresence>
-                {!isCollapsed && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                  >
-                    {item.name}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-              {isActive && !isCollapsed && (
-                <motion.div
-                  layoutId="activeIndicator"
-                  className="ml-auto w-1 h-6 bg-[#00D9FF] rounded-full"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                />
-              )}
-            </motion.button>
-          );
-        })}
 
         {/* Mobile Menu Items - Home and Notifications */}
         {isMobileMenu && !isCollapsed && (

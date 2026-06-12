@@ -355,7 +355,14 @@ export function OceanicWorkflow() {
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
+              transition={{
+                scaleX: { duration: 0.6, delay: 0.1 },
+                background: {
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }
+              }}
               whileHover={{ 
                 boxShadow: '0 0 60px rgba(0, 217, 255, 0.8)',
                 scale: 1.02,
@@ -373,11 +380,6 @@ export function OceanicWorkflow() {
                   'linear-gradient(90deg, #00B8D4 0%, #0099CC 50%, #00D9FF 100%)',
                   'linear-gradient(90deg, #00D9FF 0%, #00B8D4 50%, #0099CC 100%)',
                 ],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: 'easeInOut',
               }}
             >
               {/* Multiple Shimmer Layers */}
@@ -426,7 +428,12 @@ export function OceanicWorkflow() {
                   scale: 1.05,
                   textShadow: '0 0 20px rgba(0, 217, 255, 0.8)',
                 }}
-                transition={{ duration: 0.2 }}
+                transition={{
+                  scale: { duration: 0.2 },
+                  textShadow: { duration: 0.2 },
+                  backgroundImage: { duration: 3, repeat: Infinity, ease: 'linear' },
+                  backgroundPosition: { duration: 3, repeat: Infinity, ease: 'linear' }
+                }}
                 animate={{
                   backgroundImage: [
                     'linear-gradient(90deg, #80E9FF 0%, #00D9FF 25%, #00B8D4 50%, #0099CC 75%, #80E9FF 100%)',
@@ -436,11 +443,6 @@ export function OceanicWorkflow() {
                     'linear-gradient(90deg, #80E9FF 0%, #00D9FF 25%, #00B8D4 50%, #0099CC 75%, #80E9FF 100%)',
                   ],
                   backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: 'linear',
                 }}
                 style={{
                   backgroundClip: 'text',
