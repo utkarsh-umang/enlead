@@ -82,7 +82,7 @@ export function Navbar({ onSignUpClick }: NavbarProps) {
 
           <div className="flex items-center gap-3">
             {user ? (
-              <div className="hidden sm:flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <span className="text-sm text-white/80">Hi, <span className="text-[#00D9FF]">{user.name}</span></span>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -99,7 +99,7 @@ export function Navbar({ onSignUpClick }: NavbarProps) {
                 whileHover={{ scale: 1.05, boxShadow: '0 15px 50px rgba(0, 217, 255, 0.5)' }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onSignUpClick}
-                className="hidden sm:block relative px-6 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-white rounded-full shadow-lg shadow-[#00D9FF]/40 overflow-hidden group text-sm sm:text-base"
+                className="relative px-4 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-white rounded-full shadow-lg shadow-[#00D9FF]/40 overflow-hidden group text-sm sm:text-base"
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0"

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 interface ProfileOverlayProps {
   isOpen: boolean;
   onClose: () => void;
-  anchorRef: React.RefObject<HTMLElement>;
+  anchorRef?: React.RefObject<any>;
 }
 
 export function ProfileOverlay({ isOpen, onClose, anchorRef }: ProfileOverlayProps) {

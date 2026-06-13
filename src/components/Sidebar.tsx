@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, ChevronRight, LogOut, Home, Bell, LogIn, UserPlus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, LogOut, Home, Bell, LogIn, UserPlus, LayoutDashboard, Users } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import profileImage from 'figma:asset/3a29a51f6305397b330790f22be462da5a70d304.png';
@@ -100,16 +100,12 @@ export function Sidebar({ isCollapsed, onToggleCollapse, onNotificationClick, on
       {/* Menu Items */}
       <nav className="flex-1 px-3 py-6 space-y-2">
 
-        {/* Mobile Menu Items - Home and Notifications */}
+        {/* Mobile-only: Home and Notifications */}
         {isMobileMenu && !isCollapsed && (
           <>
             <motion.button
               onClick={() => navigate('/')}
-              whileHover={{
-                scale: 1.02,
-                x: 4,
-                boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)',
-              }}
+              whileHover={{ scale: 1.02, x: 4, boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)' }}
               whileTap={{ scale: 0.98 }}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 text-white/70 hover:text-white hover:bg-[#00D9FF]/10"
             >
@@ -119,11 +115,7 @@ export function Sidebar({ isCollapsed, onToggleCollapse, onNotificationClick, on
 
             <motion.button
               onClick={() => onNotificationClick?.()}
-              whileHover={{
-                scale: 1.02,
-                x: 4,
-                boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)',
-              }}
+              whileHover={{ scale: 1.02, x: 4, boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)' }}
               whileTap={{ scale: 0.98 }}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 text-white/70 hover:text-white hover:bg-[#00D9FF]/10"
             >
@@ -132,6 +124,50 @@ export function Sidebar({ isCollapsed, onToggleCollapse, onNotificationClick, on
             </motion.button>
           </>
         )}
+
+        {/* Dashboard */}
+        {(() => {
+          const isActive = location.pathname === '/dashboard';
+          return (
+            <motion.button
+              onClick={() => navigate('/dashboard')}
+              whileHover={{ scale: 1.02, x: isCollapsed ? 0 : 4, boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)' }}
+              whileTap={{ scale: 0.98 }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                isCollapsed ? 'justify-center' : ''
+              } ${
+                isActive
+                  ? 'bg-[#00D9FF]/15 text-[#00D9FF] border border-[#00D9FF]/30'
+                  : 'text-white/70 hover:text-white hover:bg-[#00D9FF]/10'
+              }`}
+            >
+              <LayoutDashboard className="size-5 flex-shrink-0" />
+              {!isCollapsed && <span>Dashboard</span>}
+            </motion.button>
+          );
+        })()}
+
+        {/* My Leads */}
+        {(() => {
+          const isActive = location.pathname === '/my-leads';
+          return (
+            <motion.button
+              onClick={() => navigate('/my-leads')}
+              whileHover={{ scale: 1.02, x: isCollapsed ? 0 : 4, boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)' }}
+              whileTap={{ scale: 0.98 }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                isCollapsed ? 'justify-center' : ''
+              } ${
+                isActive
+                  ? 'bg-[#00D9FF]/15 text-[#00D9FF] border border-[#00D9FF]/30'
+                  : 'text-white/70 hover:text-white hover:bg-[#00D9FF]/10'
+              }`}
+            >
+              <Users className="size-5 flex-shrink-0" />
+              {!isCollapsed && <span>My Leads</span>}
+            </motion.button>
+          );
+        })()}
       </nav>
 
       {/* Bottom Section */}
@@ -144,7 +180,10 @@ export function Sidebar({ isCollapsed, onToggleCollapse, onNotificationClick, on
             {!isProfileExpanded ? (
               <motion.button
                 key="default"
-                onClick={() => setIsProfileExpanded(true)}
+                onClick={() => {
+                  if (isCollapsed) onToggleCollapse();
+                  setIsProfileExpanded(true);
+                }}
                 whileHover={{ scale: 1.02 }}
                 className={`w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#00D9FF]/10 transition-colors ${
                   isCollapsed ? 'justify-center' : ''
