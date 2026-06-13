@@ -1,8 +1,10 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Mail, Lock, Eye, EyeOff, FileText, CheckCircle, Upload, TrendingUp, Users, Target, BarChart3 } from 'lucide-react';
+import { X, Mail, Lock, Eye, EyeOff, FileText, CheckCircle, Upload, TrendingUp, Users, Target, BarChart3, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import logoImage from 'figma:asset/80f1fbd8b5de75c83a12cb2ec032855928774201.png';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthProps {
   isOpen: boolean;
@@ -10,13 +12,17 @@ interface AuthProps {
 }
 
 export function Auth({ isOpen, onClose }: AuthProps) {
+  const { login, signup } = useAuth();
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [conversionStep, setConversionStep] = useState(0);
   const [cursorPosition, setCursorPosition] = useState({ x: 30, y: 30 });
@@ -93,7 +99,22 @@ export function Auth({ isOpen, onClose }: AuthProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', { email, password, isLogin });
+    setError(null);
+    if (isLogin) {
+      const err = login(email, password);
+      if (err) { setError(err); return; }
+    } else {
+      if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
+      const err = signup(name, email, password);
+      if (err) { setError(err); return; }
+    }
+    onClose();
+    navigate('/dashboard');
+  };
+
+  const handleModeSwitch = () => {
+    setIsLogin(!isLogin);
+    setError(null);
   };
 
   return (
@@ -142,6 +163,38 @@ export function Auth({ isOpen, onClose }: AuthProps) {
                     </h2>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
+                      {/* Error Message */}
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600"
+                        >
+                          {error}
+                        </motion.div>
+                      )}
+
+                      {/* Full Name (Sign Up only) */}
+                      {!isLogin && (
+                        <div>
+                          <label htmlFor="name" className="block text-sm mb-2 text-gray-700">
+                            Full name
+                          </label>
+                          <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                            <input
+                              id="name"
+                              type="text"
+                              value={name}
+                              onChange={(e) => setName(e.target.value)}
+                              placeholder="Jane Smith"
+                              className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#00D9FF] focus:outline-none transition-colors text-gray-900 placeholder-gray-400"
+                              required={!isLogin}
+                            />
+                          </div>
+                        </div>
+                      )}
+
                       {/* Email Input */}
                       <div>
                         <label htmlFor="email" className="block text-sm mb-2 text-gray-700">
@@ -306,7 +359,7 @@ export function Auth({ isOpen, onClose }: AuthProps) {
                         {isLogin ? "Don't have an account? " : 'Already have an account? '}
                         <button
                           type="button"
-                          onClick={() => setIsLogin(!isLogin)}
+                          onClick={handleModeSwitch}
                           className="text-[#00D9FF] hover:text-[#00B8D4] transition-colors"
                         >
                           {isLogin ? 'Sign Up' : 'Login'}

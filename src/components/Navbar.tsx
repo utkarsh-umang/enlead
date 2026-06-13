@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import logoImage from 'figma:asset/80f1fbd8b5de75c83a12cb2ec032855928774201.png';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 interface NavbarProps {
   onSignUpClick: () => void;
@@ -13,6 +14,7 @@ export function Navbar({ onSignUpClick }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   const scrollToSection = (id: string) => {
     const element = document.querySelector(id);
@@ -76,46 +78,37 @@ export function Navbar({ onSignUpClick }: NavbarProps) {
               Demo
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-[#00D9FF] to-[#00B8D4] group-hover:w-full transition-all duration-300" />
             </motion.button>
-            <motion.button
-              onClick={() => navigate('/dashboard')}
-              whileHover={{ scale: 1.05, color: '#00D9FF' }}
-              whileTap={{ scale: 0.95 }}
-              className="text-white transition-colors relative group"
-            >
-              Dashboard
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-[#00D9FF] to-[#00B8D4] group-hover:w-full transition-all duration-300" />
-            </motion.button>
-            <motion.button
-              onClick={() => navigate('/my-leads')}
-              whileHover={{ scale: 1.05, color: '#00D9FF' }}
-              whileTap={{ scale: 0.95 }}
-              className="text-white transition-colors relative group"
-            >
-              My Leads
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-[#00D9FF] to-[#00B8D4] group-hover:w-full transition-all duration-300" />
-            </motion.button>
           </div>
 
           <div className="flex items-center gap-3">
-            <motion.button
-              whileHover={{ scale: 1.05, boxShadow: '0 15px 50px rgba(0, 217, 255, 0.5)' }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onSignUpClick}
-              className="hidden sm:block relative px-6 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-white rounded-full shadow-lg shadow-[#00D9FF]/40 overflow-hidden group text-sm sm:text-base"
-            >
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0"
-                animate={{
-                  x: ['-200%', '200%'],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: 'linear',
-                }}
-              />
-              <span className="relative">Sign Up</span>
-            </motion.button>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-white/80">Hi, <span className="text-[#00D9FF]">{user.name}</span></span>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={logout}
+                  className="flex items-center gap-1.5 px-4 py-2 border border-[#00D9FF]/40 text-[#00D9FF] rounded-full text-sm hover:bg-[#00D9FF]/10 transition-colors"
+                >
+                  <LogOut className="size-4" />
+                  Sign Out
+                </motion.button>
+              </div>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.05, boxShadow: '0 15px 50px rgba(0, 217, 255, 0.5)' }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onSignUpClick}
+                className="relative px-4 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-white rounded-full shadow-lg shadow-[#00D9FF]/40 overflow-hidden group text-sm sm:text-base"
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0"
+                  animate={{ x: ['-200%', '200%'] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                />
+                <span className="relative">Sign Up</span>
+              </motion.button>
+            )}
 
             {/* Mobile Menu Button */}
             <motion.button
@@ -174,33 +167,27 @@ export function Navbar({ onSignUpClick }: NavbarProps) {
               >
                 Demo
               </motion.button>
-              <motion.button
-                onClick={() => {
-                  navigate('/dashboard');
-                  setMobileMenuOpen(false);
-                }}
-                whileTap={{ scale: 0.95 }}
-                className="text-white text-left py-3 px-4 rounded-xl hover:bg-[#00D9FF]/10 transition-colors"
-              >
-                Dashboard
-              </motion.button>
-              <motion.button
-                onClick={() => {
-                  navigate('/my-leads');
-                  setMobileMenuOpen(false);
-                }}
-                whileTap={{ scale: 0.95 }}
-                className="text-white text-left py-3 px-4 rounded-xl hover:bg-[#00D9FF]/10 transition-colors"
-              >
-                My Leads
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                className="w-full py-3 px-4 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-white rounded-xl shadow-lg shadow-[#00D9FF]/40"
-                onClick={onSignUpClick}
-              >
-                Sign Up
-              </motion.button>
+              {user ? (
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-white/80 text-sm">Hi, <span className="text-[#00D9FF]">{user.name}</span></span>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => { logout(); setMobileMenuOpen(false); }}
+                    className="flex items-center gap-1.5 text-[#00D9FF] text-sm"
+                  >
+                    <LogOut className="size-4" />
+                    Sign Out
+                  </motion.button>
+                </div>
+              ) : (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-white rounded-xl shadow-lg shadow-[#00D9FF]/40"
+                  onClick={() => { onSignUpClick(); setMobileMenuOpen(false); }}
+                >
+                  Sign Up
+                </motion.button>
+              )}
             </div>
           </motion.div>
         )}

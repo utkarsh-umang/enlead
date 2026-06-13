@@ -151,7 +151,15 @@ export function Demo() {
                         initial={{ opacity: 0, scale: 0 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 1.5 + i * 0.1 }}
+                                                transition={{
+                          opacity: { duration: 0.5, delay: 1.5 + i * 0.1 },
+                          scale: { duration: 0.5, delay: 1.5 + i * 0.1 },
+                          boxShadow: {
+                            duration: 2,
+                            repeat: Infinity,
+                            delay: i * 0.2,
+                          }
+                        }}
                         className="absolute w-2 h-2 bg-[#00D9FF] rounded-full shadow-lg shadow-[#00D9FF]"
                         style={{
                           left: `${x}%`,
@@ -163,11 +171,6 @@ export function Demo() {
                             '0 0 20px rgba(0, 217, 255, 1)',
                             '0 0 10px rgba(0, 217, 255, 0.5)',
                           ],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          delay: i * 0.2,
                         }}
                       />
                     ))}
