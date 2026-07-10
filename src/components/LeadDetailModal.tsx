@@ -99,7 +99,25 @@ export function LeadDetailModal({ lead, onClose }: LeadDetailModalProps) {
                   <Field label="Category" value={lead.category} />
 
                   <h3 className="text-sm text-[#00D9FF] uppercase tracking-wider mb-2 mt-6">Provenance</h3>
-                  <Field label="Sources" value={lead.sources.join(', ') || null} />
+                  {lead.source_files.length === 0 ? (
+                    <Field label="Sources" value={lead.sources.join(', ') || null} />
+                  ) : (
+                    <div className="py-2 border-b border-[#00D9FF]/10">
+                      <div className="text-xs text-white/50 uppercase tracking-wider mb-1">
+                        Uploaded in ({lead.source_files.length})
+                      </div>
+                      <div className="space-y-1.5 mt-1">
+                        {lead.source_files.map((sf, i) => (
+                          <div key={i} className="text-sm text-white flex items-baseline justify-between gap-2">
+                            <span className="break-all">{sf.filename}</span>
+                            <span className="text-white/40 text-xs shrink-0">
+                              {new Date(sf.uploaded_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <Field label="Added to master table" value={new Date(lead.created_at).toLocaleString()} />
                 </div>
               </div>

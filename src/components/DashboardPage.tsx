@@ -1,9 +1,8 @@
 import { motion } from 'motion/react';
-import { Bell, Plus, Database, Menu, Home, Mail, Users, Layers } from 'lucide-react';
+import { Plus, Database, Menu, Home, Mail, Users, Layers } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { AnimatedCounter } from './AnimatedCounter';
 import { ProfileOverlay } from './ProfileOverlay';
-import { NotificationsOverlay } from './NotificationsOverlay';
 import { ImportLeadsModal } from './ImportLeadsModal';
 import { useSidebar } from '../context/SidebarContext';
 import { useState, useRef } from 'react';
@@ -14,7 +13,6 @@ export function DashboardPage() {
   const { isCollapsed, toggleCollapse } = useSidebar();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const profileRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
@@ -37,15 +35,7 @@ export function DashboardPage() {
           transition={{ type: 'spring', damping: 25 }}
           className="lg:hidden fixed inset-y-0 left-0 z-50"
         >
-          <Sidebar
-            isCollapsed={false}
-            onToggleCollapse={() => setIsMobileMenuOpen(false)}
-            isMobileMenu={true}
-            onNotificationClick={() => {
-              setIsMobileMenuOpen(false);
-              setIsNotificationsOpen(true);
-            }}
-          />
+          <Sidebar isCollapsed={false} onToggleCollapse={() => setIsMobileMenuOpen(false)} isMobileMenu={true} />
         </motion.div>
       )}
 
@@ -85,14 +75,6 @@ export function DashboardPage() {
               <Home className="size-4 sm:size-5 text-[#00D9FF]" />
             </motion.button>
 
-            <motion.button
-              whileHover={{ scale: 1.1, boxShadow: '0 0 20px rgba(0, 217, 255, 0.4)' }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className="hidden lg:flex p-2 hover:bg-[#00D9FF]/10 rounded-lg transition-colors border border-[#00D9FF]/30"
-            >
-              <Bell className="size-4 sm:size-5 text-[#00D9FF]" />
-            </motion.button>
             <motion.button
               whileHover={{ scale: 1.02, boxShadow: '0 15px 50px rgba(0, 217, 255, 0.5)' }}
               whileTap={{ scale: 0.98 }}
@@ -234,7 +216,6 @@ export function DashboardPage() {
 
       {/* Overlays */}
       <ProfileOverlay isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} anchorRef={profileRef} />
-      <NotificationsOverlay isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
       <ImportLeadsModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} />
 
       {/* Bioluminescent Text Effect */}

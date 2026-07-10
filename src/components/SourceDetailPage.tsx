@@ -1,9 +1,8 @@
 import { motion } from 'motion/react';
-import { ArrowLeft, Upload, Layers, Mail, MailX, Menu, Bell, Home } from 'lucide-react';
+import { ArrowLeft, Upload, Layers, Mail, MailX, Menu, Home } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { Sidebar } from './Sidebar';
-import { NotificationsOverlay } from './NotificationsOverlay';
 import { useSidebar } from '../context/SidebarContext';
 import { useSourceDetail } from '../hooks/api/useSourceDetail';
 import { AnimatedCounter } from './AnimatedCounter';
@@ -50,7 +49,6 @@ export function SourceDetailPage() {
   const navigate = useNavigate();
   const { isCollapsed, toggleCollapse } = useSidebar();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const { data, isLoading, isError } = useSourceDetail(source ?? '');
 
@@ -93,14 +91,6 @@ export function SourceDetailPage() {
             </motion.button>
             <h1 className="text-xl sm:text-2xl text-white">{source}</h1>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.1, boxShadow: '0 0 20px rgba(0, 217, 255, 0.4)' }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className="p-2 hover:bg-[#00D9FF]/10 rounded-lg transition-colors border border-[#00D9FF]/30"
-          >
-            <Bell className="size-4 sm:size-5 text-[#00D9FF]" />
-          </motion.button>
         </div>
 
         <div className="p-4 sm:p-8">
@@ -211,8 +201,6 @@ export function SourceDetailPage() {
           )}
         </div>
       </div>
-
-      <NotificationsOverlay isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
 
       <style>{`
         .bioluminescent-text {

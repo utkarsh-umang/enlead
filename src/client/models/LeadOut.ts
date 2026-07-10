@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { SourceFileOut } from './SourceFileOut';
 export type LeadOut = {
     id: string;
     email: (string | null);
@@ -27,5 +28,6 @@ export type LeadOut = {
     youtube_last_upload_date: (string | null);
     created_at: string;
     sources: Array<string>;
+    source_files: Array<SourceFileOut>;
 };
 

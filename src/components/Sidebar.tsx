@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, Users, ChevronLeft, ChevronRight, LogOut, UserPlus, User as UserIcon, Home, Bell } from 'lucide-react';
+import { LayoutDashboard, Users, ChevronLeft, ChevronRight, LogOut, UserPlus, User as UserIcon, Home } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import profileImage from 'figma:asset/3a29a51f6305397b330790f22be462da5a70d304.png';
@@ -9,11 +9,10 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  onNotificationClick?: () => void;
   isMobileMenu?: boolean;
 }
 
-export function Sidebar({ isCollapsed, onToggleCollapse, onNotificationClick, isMobileMenu }: SidebarProps) {
+export function Sidebar({ isCollapsed, onToggleCollapse, isMobileMenu }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isProfileExpanded, setIsProfileExpanded] = useState(false);
@@ -144,37 +143,21 @@ export function Sidebar({ isCollapsed, onToggleCollapse, onNotificationClick, is
           );
         })}
 
-        {/* Mobile Menu Items - Home and Notifications */}
+        {/* Mobile Menu Item - Home */}
         {isMobileMenu && !isCollapsed && (
-          <>
-            <motion.button
-              onClick={() => navigate('/')}
-              whileHover={{
-                scale: 1.02,
-                x: 4,
-                boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)',
-              }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 text-white/70 hover:text-white hover:bg-[#00D9FF]/10"
-            >
-              <Home className="size-5" />
-              <span>Home</span>
-            </motion.button>
-
-            <motion.button
-              onClick={() => onNotificationClick?.()}
-              whileHover={{
-                scale: 1.02,
-                x: 4,
-                boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)',
-              }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 text-white/70 hover:text-white hover:bg-[#00D9FF]/10"
-            >
-              <Bell className="size-5" />
-              <span>Notifications</span>
-            </motion.button>
-          </>
+          <motion.button
+            onClick={() => navigate('/')}
+            whileHover={{
+              scale: 1.02,
+              x: 4,
+              boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)',
+            }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 text-white/70 hover:text-white hover:bg-[#00D9FF]/10"
+          >
+            <Home className="size-5" />
+            <span>Home</span>
+          </motion.button>
         )}
       </nav>
 

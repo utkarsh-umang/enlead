@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Bell, Plus, Search, Filter, ChevronLeft, ChevronRight, Download, Menu, X, Mail, Building2, User, Home, Database } from 'lucide-react';
+import { Plus, Search, Filter, ChevronLeft, ChevronRight, Download, Menu, X, Mail, Building2, User, Home, Database } from 'lucide-react';
 import { Sidebar } from './Sidebar';
-import { NotificationsOverlay } from './NotificationsOverlay';
 import { ImportLeadsModal } from './ImportLeadsModal';
 import { LeadDetailModal } from './LeadDetailModal';
 import { useSidebar } from '../context/SidebarContext';
@@ -15,6 +14,43 @@ import type { LeadOut } from '@/client';
 
 const PAGE_SIZE = 25;
 
+// Everything master_leads actually stores, for the "All Columns" view —
+// most of this doesn't fit in the compact table, but it's real data that
+// shouldn't be invisible just because there's no room for it by default.
+interface LeadColumn {
+  label: string;
+  render: (lead: LeadOut) => string;
+}
+
+const FULL_COLUMNS: LeadColumn[] = [
+  { label: 'Channel Name', render: (l) => l.youtube_channel_name ?? '—' },
+  { label: 'Handle', render: (l) => l.youtube_handle ?? '—' },
+  { label: 'Channel ID', render: (l) => l.youtube_channel_id ?? '—' },
+  { label: 'Country', render: (l) => l.country ?? '—' },
+  { label: 'Niche', render: (l) => l.niche ?? '—' },
+  { label: 'Category', render: (l) => l.category ?? '—' },
+  { label: 'Email', render: (l) => l.email ?? '—' },
+  { label: 'Email Source', render: (l) => l.email_source ?? '—' },
+  {
+    label: 'Email Confidence',
+    render: (l) => (l.email_confidence !== null ? `${Math.round(l.email_confidence * 100)}%` : '—'),
+  },
+  { label: 'Website', render: (l) => l.website ?? '—' },
+  { label: 'YouTube', render: (l) => l.social_youtube ?? '—' },
+  { label: 'Twitter', render: (l) => l.social_twitter ?? '—' },
+  { label: 'Instagram', render: (l) => l.social_instagram ?? '—' },
+  { label: 'TikTok', render: (l) => l.social_tiktok ?? '—' },
+  { label: 'Facebook', render: (l) => l.social_facebook ?? '—' },
+  { label: 'LinkedIn', render: (l) => l.social_linkedin ?? '—' },
+  { label: 'Subscribers', render: (l) => l.youtube_subscriber_count?.toLocaleString() ?? '—' },
+  { label: 'Videos', render: (l) => l.youtube_video_count?.toLocaleString() ?? '—' },
+  { label: 'Uploads (30d)', render: (l) => l.youtube_uploads_last_30d?.toString() ?? '—' },
+  { label: 'Avg Views', render: (l) => l.youtube_avg_views?.toLocaleString() ?? '—' },
+  { label: 'Last Upload', render: (l) => l.youtube_last_upload_date ?? '—' },
+  { label: 'Sources', render: (l) => l.sources.join(', ') || '—' },
+  { label: 'Added', render: (l) => new Date(l.created_at).toLocaleDateString() },
+];
+
 export function MyLeadsPage() {
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const { isCollapsed, toggleCollapse } = useSidebar();
@@ -23,12 +59,12 @@ export function MyLeadsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sourceFilter, setSourceFilter] = useState('');
   const [hasEmailFilter, setHasEmailFilter] = useState<'' | 'true' | 'false'>('');
   const [detailLead, setDetailLead] = useState<LeadOut | null>(null);
+  const [viewMode, setViewMode] = useState<'compact' | 'full'>('compact');
   const profileRef = useRef<HTMLButtonElement>(null);
 
   // Debounce search so we're not hitting the API on every keystroke.
@@ -51,18 +87,53 @@ export function MyLeadsPage() {
   const activeFilterCount = (sourceFilter ? 1 : 0) + (hasEmailFilter ? 1 : 0);
   const navigate = useNavigate();
 
+  // "Select all matching filter" spans every page, not just what's loaded —
+  // we don't hold thousands of IDs in memory for it, just this flag. The
+  // explicit selectedLeads array is only meaningful when this is false.
+  const [selectAllMatching, setSelectAllMatching] = useState(false);
+  const allOnPageSelected = leads.length > 0 && leads.every((l) => selectedLeads.includes(l.id));
+  const selectedCount = selectAllMatching ? total : selectedLeads.length;
+
+  // A stale selection from a different filter view would be confusing —
+  // clear it whenever the filter criteria changes. Page navigation within
+  // the same filter is fine to keep (selectAllMatching already covers that;
+  // an explicit selection persisting across pages is normal behavior).
+  useEffect(() => {
+    setSelectedLeads([]);
+    setSelectAllMatching(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, sourceFilter, hasEmailFilter]);
+
   const toggleLead = (id: string) => {
+    if (selectAllMatching) {
+      // Dropping out of "all matching" mode — seed with this page's IDs
+      // minus the one just unchecked, since we never held the full
+      // filtered set of IDs in memory to begin with.
+      setSelectAllMatching(false);
+      setSelectedLeads(leads.map((l) => l.id).filter((leadId) => leadId !== id));
+      return;
+    }
     setSelectedLeads((prev) =>
       prev.includes(id) ? prev.filter((leadId) => leadId !== id) : [...prev, id]
     );
   };
 
-  const toggleAll = () => {
-    if (selectedLeads.length === leads.length) {
+  const toggleAllOnPage = () => {
+    if (selectAllMatching) {
+      setSelectAllMatching(false);
+      setSelectedLeads([]);
+      return;
+    }
+    if (allOnPageSelected) {
       setSelectedLeads([]);
     } else {
       setSelectedLeads(leads.map((lead) => lead.id));
     }
+  };
+
+  const clearSelection = () => {
+    setSelectedLeads([]);
+    setSelectAllMatching(false);
   };
 
   // Only two states we actually have a real signal for today: an email was
@@ -131,13 +202,16 @@ export function MyLeadsPage() {
               <Menu className="size-5 text-[#00D9FF]" />
             </motion.button>
             <h1 className="text-xl sm:text-2xl text-white">My Leads</h1>
-            {selectedLeads.length > 0 && (
+            {selectedCount > 0 && (
               <motion.span
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="px-3 py-1 bg-[#00D9FF]/20 border border-[#00D9FF]/40 rounded-full text-sm text-[#00D9FF]"
+                className="px-3 py-1 bg-[#00D9FF]/20 border border-[#00D9FF]/40 rounded-full text-sm text-[#00D9FF] flex items-center gap-2"
               >
-                {selectedLeads.length} selected
+                {selectedCount.toLocaleString()} selected
+                <button onClick={clearSelection} className="text-[#00D9FF]/60 hover:text-[#00D9FF]">
+                  <X className="size-3" />
+                </button>
               </motion.span>
             )}
           </div>
@@ -152,14 +226,6 @@ export function MyLeadsPage() {
               <Home className="size-4 sm:size-5 text-[#00D9FF]" />
             </motion.button>
 
-            <motion.button
-              whileHover={{ scale: 1.1, boxShadow: '0 0 20px rgba(0, 217, 255, 0.4)' }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className="p-2 hover:bg-[#00D9FF]/10 rounded-lg transition-colors border border-[#00D9FF]/30"
-            >
-              <Bell className="size-4 sm:size-5 text-[#00D9FF]" />
-            </motion.button>
             <motion.button
               whileHover={{ scale: 1.02, boxShadow: '0 15px 50px rgba(0, 217, 255, 0.5)' }}
               whileTap={{ scale: 0.98 }}
@@ -293,6 +359,25 @@ export function MyLeadsPage() {
                 )}
               </AnimatePresence>
             </div>
+
+            <div className="hidden md:flex items-center border border-[#00D9FF]/30 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode('compact')}
+                className={`px-3 py-3 text-sm transition-colors ${
+                  viewMode === 'compact' ? 'bg-[#00D9FF]/20 text-[#00D9FF]' : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Compact
+              </button>
+              <button
+                onClick={() => setViewMode('full')}
+                className={`px-3 py-3 text-sm transition-colors border-l border-[#00D9FF]/30 ${
+                  viewMode === 'full' ? 'bg-[#00D9FF]/20 text-[#00D9FF]' : 'text-white/60 hover:text-white'
+                }`}
+              >
+                All Columns
+              </button>
+            </div>
           </div>
 
           {/* Data Table */}
@@ -301,7 +386,31 @@ export function MyLeadsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="backdrop-blur-xl bg-[#0A1628]/40 border border-[#00D9FF]/30 rounded-2xl shadow-lg shadow-[#00D9FF]/10 overflow-hidden"
           >
-            {/* Desktop Table View */}
+            {/* "Select all matching filter" banner — only makes sense once
+                the whole page is selected AND there's more beyond this page. */}
+            <AnimatePresence>
+              {allOnPageSelected && !selectAllMatching && total > leads.length && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="px-4 sm:px-6 py-3 bg-[#00D9FF]/10 border-b border-[#00D9FF]/20 text-sm text-white/80 flex items-center justify-center gap-2"
+                >
+                  <span>
+                    All {leads.length} leads on this page are selected.
+                  </span>
+                  <button
+                    onClick={() => setSelectAllMatching(true)}
+                    className="text-[#00D9FF] hover:underline font-medium"
+                  >
+                    Select all {total.toLocaleString()} leads matching this filter
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Desktop Table View — compact */}
+            {viewMode === 'compact' && (
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -311,8 +420,8 @@ export function MyLeadsPage() {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         type="checkbox"
-                        checked={selectedLeads.length === leads.length}
-                        onChange={toggleAll}
+                        checked={selectAllMatching || allOnPageSelected}
+                        onChange={toggleAllOnPage}
                         className="w-4 h-4 accent-[#00D9FF] cursor-pointer rounded border-[#00D9FF]/40"
                       />
                     </th>
@@ -359,7 +468,7 @@ export function MyLeadsPage() {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             type="checkbox"
-                            checked={selectedLeads.includes(lead.id)}
+                            checked={selectAllMatching || selectedLeads.includes(lead.id)}
                             onChange={() => toggleLead(lead.id)}
                             className="w-4 h-4 accent-[#00D9FF] cursor-pointer rounded border-[#00D9FF]/40"
                           />
@@ -412,6 +521,73 @@ export function MyLeadsPage() {
                 </tbody>
               </table>
             </div>
+            )}
+
+            {/* Desktop Table View — all columns. Mobile keeps the compact
+                card view regardless of mode — a 20+ column table doesn't
+                work on a phone. */}
+            {viewMode === 'full' && (
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-[#00D9FF]/20">
+                      <th className="p-4 text-left sticky left-0 bg-[#0A1628] z-10">
+                        <motion.input
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          type="checkbox"
+                          checked={selectAllMatching || allOnPageSelected}
+                          onChange={toggleAllOnPage}
+                          className="w-4 h-4 accent-[#00D9FF] cursor-pointer rounded border-[#00D9FF]/40"
+                        />
+                      </th>
+                      {FULL_COLUMNS.map((col) => (
+                        <th
+                          key={col.label}
+                          className="text-left p-4 text-xs uppercase tracking-wider text-white/60 whitespace-nowrap"
+                        >
+                          {col.label}
+                        </th>
+                      ))}
+                      <th className="text-center p-4 text-xs uppercase tracking-wider text-white/60 whitespace-nowrap">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leads.map((lead) => (
+                      <tr key={lead.id} className="border-b border-[#00D9FF]/10 hover:bg-[#00D9FF]/5 transition-colors">
+                        <td className="p-4 sticky left-0 bg-[#0A1628]">
+                          <motion.input
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            type="checkbox"
+                            checked={selectAllMatching || selectedLeads.includes(lead.id)}
+                            onChange={() => toggleLead(lead.id)}
+                            className="w-4 h-4 accent-[#00D9FF] cursor-pointer rounded border-[#00D9FF]/40"
+                          />
+                        </td>
+                        {FULL_COLUMNS.map((col) => (
+                          <td key={col.label} className="p-4 text-white/70 text-sm whitespace-nowrap max-w-xs truncate">
+                            {col.render(lead)}
+                          </td>
+                        ))}
+                        <td className="p-4 text-center">
+                          <motion.button
+                            whileHover={{ scale: 1.08, boxShadow: '0 0 25px rgba(0, 217, 255, 0.8)' }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setDetailLead(lead)}
+                            className="px-4 py-2 bg-gradient-to-r from-[#00D9FF]/20 to-[#00B8D4]/20 border border-[#00D9FF]/60 text-[#00D9FF] rounded-lg hover:from-[#00D9FF]/30 hover:to-[#00B8D4]/30 transition-all text-sm shadow-lg shadow-[#00D9FF]/20 whitespace-nowrap"
+                          >
+                            View Data
+                          </motion.button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-[#00D9FF]/10">
@@ -431,7 +607,7 @@ export function MyLeadsPage() {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         type="checkbox"
-                        checked={selectedLeads.includes(lead.id)}
+                        checked={selectAllMatching || selectedLeads.includes(lead.id)}
                         onChange={() => toggleLead(lead.id)}
                         className="w-4 h-4 mt-1 accent-[#00D9FF] cursor-pointer rounded border-[#00D9FF]/40"
                       />
@@ -549,10 +725,6 @@ export function MyLeadsPage() {
       </div>
 
       {/* Overlays */}
-      <NotificationsOverlay
-        isOpen={isNotificationsOpen}
-        onClose={() => setIsNotificationsOpen(false)}
-      />
       <ImportLeadsModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}

@@ -17,6 +17,7 @@ export type { LeadPage } from './models/LeadPage';
 export type { LeadStats } from './models/LeadStats';
 export type { SourceCount } from './models/SourceCount';
 export type { SourceDetail } from './models/SourceDetail';
+export type { SourceFileOut } from './models/SourceFileOut';
 export type { ValidationError } from './models/ValidationError';
 
 export { BatchesService } from './services/BatchesService';
