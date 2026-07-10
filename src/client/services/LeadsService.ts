@@ -3,10 +3,22 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { LeadPage } from '../models/LeadPage';
+import type { LeadStats } from '../models/LeadStats';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class LeadsService {
+    /**
+     * Get Lead Stats
+     * @returns LeadStats Successful Response
+     * @throws ApiError
+     */
+    public static getLeadStats(): CancelablePromise<LeadStats> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/leads/stats',
+        });
+    }
     /**
      * List Leads
      * @param page

@@ -13,6 +13,8 @@ export type { HealthResponse } from './models/HealthResponse';
 export type { HTTPValidationError } from './models/HTTPValidationError';
 export type { LeadOut } from './models/LeadOut';
 export type { LeadPage } from './models/LeadPage';
+export type { LeadStats } from './models/LeadStats';
+export type { SourceCount } from './models/SourceCount';
 export type { ValidationError } from './models/ValidationError';
 
 export { BatchesService } from './services/BatchesService';
