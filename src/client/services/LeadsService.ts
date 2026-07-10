@@ -24,6 +24,8 @@ export class LeadsService {
      * @param page
      * @param pageSize
      * @param search
+     * @param source
+     * @param hasEmail
      * @returns LeadPage Successful Response
      * @throws ApiError
      */
@@ -31,6 +33,8 @@ export class LeadsService {
         page: number = 1,
         pageSize: number = 25,
         search?: (string | null),
+        source?: (string | null),
+        hasEmail?: (boolean | null),
     ): CancelablePromise<LeadPage> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -39,6 +43,8 @@ export class LeadsService {
                 'page': page,
                 'page_size': pageSize,
                 'search': search,
+                'source': source,
+                'has_email': hasEmail,
             },
             errors: {
                 422: `Validation Error`,

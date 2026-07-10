@@ -1,14 +1,17 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Bell, Plus, Search, Filter, ChevronLeft, ChevronRight, Download, Menu, X, Mail, Building2, User, Home, Copy, Database } from 'lucide-react';
+import { Bell, Plus, Search, Filter, ChevronLeft, ChevronRight, Download, Menu, X, Mail, Building2, User, Home, Database } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { NotificationsOverlay } from './NotificationsOverlay';
 import { ImportLeadsModal } from './ImportLeadsModal';
+import { LeadDetailModal } from './LeadDetailModal';
 import { useSidebar } from '../context/SidebarContext';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import profileImage from 'figma:asset/3a29a51f6305397b330790f22be462da5a70d304.png';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useLeads } from '../hooks/api/useLeads';
+import { useLeadStats } from '../hooks/api/useLeadStats';
+import type { LeadOut } from '@/client';
 
 const PAGE_SIZE = 25;
 
@@ -22,6 +25,10 @@ export function MyLeadsPage() {
   const [page, setPage] = useState(1);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState('');
+  const [hasEmailFilter, setHasEmailFilter] = useState<'' | 'true' | 'false'>('');
+  const [detailLead, setDetailLead] = useState<LeadOut | null>(null);
   const profileRef = useRef<HTMLButtonElement>(null);
 
   // Debounce search so we're not hitting the API on every keystroke.
@@ -33,10 +40,15 @@ export function MyLeadsPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const { data, isLoading, isError } = useLeads(page, PAGE_SIZE, debouncedSearch);
+  const { data: statsData } = useLeadStats();
+  const { data, isLoading, isError } = useLeads(page, PAGE_SIZE, debouncedSearch, {
+    source: sourceFilter || undefined,
+    hasEmail: hasEmailFilter === '' ? undefined : hasEmailFilter === 'true',
+  });
   const leads = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const activeFilterCount = (sourceFilter ? 1 : 0) + (hasEmailFilter ? 1 : 0);
   const navigate = useNavigate();
 
   const toggleLead = (id: string) => {
@@ -200,19 +212,87 @@ export function MyLeadsPage() {
                 </motion.button>
               )}
             </div>
-            <motion.button
-              whileHover={{
-                scale: 1.02,
-                borderColor: 'rgba(0, 217, 255, 0.6)',
-                boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)',
-              }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center justify-center gap-2 px-4 py-3 backdrop-blur-xl bg-[#0A1628]/40 border border-[#00D9FF]/30 rounded-lg hover:bg-[#00D9FF]/10 transition-colors text-white"
-            >
-              <Filter className="size-5 text-[#00D9FF]" />
-              <span className="hidden sm:inline">Filter by Status/Source</span>
-              <span className="sm:hidden">Filter</span>
-            </motion.button>
+            <div className="relative">
+              <motion.button
+                whileHover={{
+                  scale: 1.02,
+                  borderColor: 'rgba(0, 217, 255, 0.6)',
+                  boxShadow: '0 0 20px rgba(0, 217, 255, 0.3)',
+                }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsFilterOpen((v) => !v)}
+                className="relative z-50 flex items-center justify-center gap-2 px-4 py-3 backdrop-blur-xl bg-[#0A1628]/40 border border-[#00D9FF]/30 rounded-lg hover:bg-[#00D9FF]/10 transition-colors text-white"
+              >
+                <Filter className="size-5 text-[#00D9FF]" />
+                <span className="hidden sm:inline">Filter by Status/Source</span>
+                <span className="sm:hidden">Filter</span>
+                {activeFilterCount > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-[#00D9FF] text-[#0A1628] rounded-full text-xs">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </motion.button>
+
+              <AnimatePresence>
+                {isFilterOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute right-0 mt-2 w-72 backdrop-blur-xl bg-[#0A1628]/95 border border-[#00D9FF]/30 rounded-lg shadow-xl shadow-[#00D9FF]/20 p-4 z-50 space-y-4"
+                    >
+                      <div>
+                        <label className="block text-xs text-white/60 uppercase tracking-wider mb-2">Source</label>
+                        <select
+                          value={sourceFilter}
+                          onChange={(e) => {
+                            setSourceFilter(e.target.value);
+                            setPage(1);
+                          }}
+                          className="w-full px-3 py-2 bg-[#0A1628]/60 border border-[#00D9FF]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#00D9FF]"
+                        >
+                          <option value="">All sources</option>
+                          {statsData?.by_source.map((s) => (
+                            <option key={s.source} value={s.source}>
+                              {s.source} ({s.lead_count.toLocaleString()})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-white/60 uppercase tracking-wider mb-2">Status</label>
+                        <select
+                          value={hasEmailFilter}
+                          onChange={(e) => {
+                            setHasEmailFilter(e.target.value as '' | 'true' | 'false');
+                            setPage(1);
+                          }}
+                          className="w-full px-3 py-2 bg-[#0A1628]/60 border border-[#00D9FF]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#00D9FF]"
+                        >
+                          <option value="">All statuses</option>
+                          <option value="true">Email Found</option>
+                          <option value="false">No Email Yet</option>
+                        </select>
+                      </div>
+                      {activeFilterCount > 0 && (
+                        <button
+                          onClick={() => {
+                            setSourceFilter('');
+                            setHasEmailFilter('');
+                            setPage(1);
+                          }}
+                          className="text-xs text-[#00D9FF] hover:underline"
+                        >
+                          Clear filters
+                        </button>
+                      )}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Data Table */}
@@ -319,19 +399,10 @@ export function MyLeadsPage() {
                                 boxShadow: '0 0 25px rgba(0, 217, 255, 0.8)',
                               }}
                               whileTap={{ scale: 0.95 }}
+                              onClick={() => setDetailLead(lead)}
                               className="px-4 py-2 bg-gradient-to-r from-[#00D9FF]/20 to-[#00B8D4]/20 border border-[#00D9FF]/60 text-[#00D9FF] rounded-lg hover:from-[#00D9FF]/30 hover:to-[#00B8D4]/30 transition-all text-sm shadow-lg shadow-[#00D9FF]/20"
                             >
                               View Data
-                            </motion.button>
-                            <motion.button
-                              whileHover={{
-                                scale: 1.08,
-                                boxShadow: '0 0 25px rgba(0, 184, 212, 0.8)',
-                              }}
-                              whileTap={{ scale: 0.95 }}
-                              className="px-4 py-2 bg-gradient-to-r from-[#00B8D4]/20 to-[#0099CC]/20 border border-[#00B8D4]/60 text-[#00B8D4] rounded-lg hover:from-[#00B8D4]/30 hover:to-[#0099CC]/30 transition-all text-sm shadow-lg shadow-[#00B8D4]/20"
-                            >
-                              View Copy
                             </motion.button>
                           </div>
                         </td>
@@ -390,16 +461,10 @@ export function MyLeadsPage() {
                           <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
+                            onClick={() => setDetailLead(lead)}
                             className="flex-1 px-3 py-2 bg-[#00D9FF]/10 border border-[#00D9FF] text-[#00D9FF] rounded-lg text-xs"
                           >
                             View Data
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="flex-1 px-3 py-2 bg-[#00D9FF]/10 border border-[#00D9FF] text-[#00D9FF] rounded-lg text-xs"
-                          >
-                            View Copy
                           </motion.button>
                         </div>
                       </div>
@@ -492,6 +557,7 @@ export function MyLeadsPage() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
       />
+      <LeadDetailModal lead={detailLead} onClose={() => setDetailLead(null)} />
     </div>
   );
 }

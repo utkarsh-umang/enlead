@@ -208,12 +208,14 @@ export function DashboardPage() {
             {!isLoading && stats && stats.by_source.length > 0 && (
               <div className="divide-y divide-[#00D9FF]/10">
                 {stats.by_source.map((row, index) => (
-                  <motion.div
+                  <motion.button
                     key={row.source}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.5 + index * 0.05 }}
-                    className="flex items-center justify-between p-4 sm:p-6 hover:bg-[#00D9FF]/5 transition-colors"
+                    whileHover={{ backgroundColor: 'rgba(0, 217, 255, 0.05)' }}
+                    onClick={() => navigate(`/source/${encodeURIComponent(row.source)}`)}
+                    className="w-full flex items-center justify-between p-4 sm:p-6 transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
                       <Database className="size-4 sm:size-5 text-[#00D9FF]" />
@@ -222,7 +224,7 @@ export function DashboardPage() {
                     <span className="text-[#00D9FF] text-sm sm:text-base">
                       {row.lead_count.toLocaleString()} leads
                     </span>
-                  </motion.div>
+                  </motion.button>
                 ))}
               </div>
             )}
