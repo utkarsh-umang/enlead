@@ -4,90 +4,42 @@ import { Sidebar } from './Sidebar';
 import { NotificationsOverlay } from './NotificationsOverlay';
 import { ImportLeadsModal } from './ImportLeadsModal';
 import { useSidebar } from '../context/SidebarContext';
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import profileImage from 'figma:asset/3a29a51f6305397b330790f22be462da5a70d304.png';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { useLeads } from '../hooks/api/useLeads';
+
+const PAGE_SIZE = 25;
 
 export function MyLeadsPage() {
-  const [selectedLeads, setSelectedLeads] = useState<number[]>([]);
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const { isCollapsed, toggleCollapse } = useSidebar();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const profileRef = useRef<HTMLButtonElement>(null);
+
+  // Debounce search so we're not hitting the API on every keystroke.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const { data, isLoading, isError } = useLeads(page, PAGE_SIZE, debouncedSearch);
+  const leads = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const navigate = useNavigate();
 
-  const leads = [
-    {
-      id: 1,
-      name: 'Sarah Jones',
-      company: 'TechFlow Inc',
-      email: 'sarah.jones@techflow.com',
-      sourceList: 'SaaS Founders Q4',
-      status: 'ready',
-    },
-    {
-      id: 2,
-      name: 'David Lee',
-      company: 'River Valley Agency',
-      email: 'david@rivervalley.com',
-      sourceList: 'Local Agencies',
-      status: 'scraped',
-    },
-    {
-      id: 3,
-      name: 'Mike Brown',
-      company: 'Commerce Hub',
-      email: 'mike.b@commercehub.io',
-      sourceList: 'E-commerce List',
-      status: 'pending',
-    },
-    {
-      id: 4,
-      name: 'Emily Chen',
-      company: 'Digital Dynamics',
-      email: 'emily@digitaldynamics.com',
-      sourceList: 'SaaS Founders Q4',
-      status: 'ready',
-    },
-    {
-      id: 5,
-      name: 'James Wilson',
-      company: 'Marketing Pro',
-      email: 'j.wilson@marketingpro.com',
-      sourceList: 'Local Agencies',
-      status: 'scraped',
-    },
-    {
-      id: 6,
-      name: 'Lisa Anderson',
-      company: 'CloudTech Solutions',
-      email: 'lisa@cloudtech.com',
-      sourceList: 'SaaS Founders Q4',
-      status: 'ready',
-    },
-    {
-      id: 7,
-      name: 'Robert Taylor',
-      company: 'Growth Agency',
-      email: 'robert@growthagency.co',
-      sourceList: 'Local Agencies',
-      status: 'pending',
-    },
-    {
-      id: 8,
-      name: 'Jennifer Martinez',
-      company: 'E-Shop Global',
-      email: 'jen@eshopglobal.com',
-      sourceList: 'E-commerce List',
-      status: 'ready',
-    },
-  ];
-
-  const toggleLead = (id: number) => {
+  const toggleLead = (id: string) => {
     setSelectedLeads((prev) =>
       prev.includes(id) ? prev.filter((leadId) => leadId !== id) : [...prev, id]
     );
@@ -101,51 +53,26 @@ export function MyLeadsPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ready':
-        return {
-          bg: 'bg-orange-500/20',
-          text: 'text-orange-400',
-          border: 'border-orange-500/40',
-          glow: 'shadow-[0_0_15px_rgba(251,146,60,0.3)]',
-        };
-      case 'scraped':
-        return {
+  // Only two states we actually have a real signal for today: an email was
+  // found on ingestion, or it wasn't. Enrichment (email finder) isn't wired
+  // up yet — once it is, "not found" vs "not yet attempted" can split out.
+  const getStatusColor = (hasEmail: boolean) => {
+    return hasEmail
+      ? {
           bg: 'bg-green-500/20',
           text: 'text-green-400',
           border: 'border-green-500/40',
           glow: 'shadow-[0_0_15px_rgba(34,197,94,0.3)]',
-        };
-      case 'pending':
-        return {
+        }
+      : {
           bg: 'bg-gray-500/20',
           text: 'text-gray-400',
           border: 'border-gray-500/40',
           glow: 'shadow-[0_0_15px_rgba(107,114,128,0.3)]',
         };
-      default:
-        return {
-          bg: 'bg-gray-500/20',
-          text: 'text-gray-400',
-          border: 'border-gray-500/40',
-          glow: '',
-        };
-    }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'ready':
-        return 'Ready';
-      case 'scraped':
-        return 'Scraped';
-      case 'pending':
-        return 'Pending';
-      default:
-        return status;
-    }
-  };
+  const getStatusLabel = (hasEmail: boolean) => (hasEmail ? 'Email Found' : 'No Email Yet');
 
   return (
     <div className="flex h-screen bg-[#0A1628] noise-texture">
@@ -310,10 +237,10 @@ export function MyLeadsPage() {
                       />
                     </th>
                     <th className="text-left p-4 text-xs uppercase tracking-wider text-white/60">
-                      Lead Name
+                      Channel Name
                     </th>
                     <th className="text-left p-4 text-xs uppercase tracking-wider text-white/60">
-                      Company
+                      Country
                     </th>
                     <th className="text-left p-4 text-xs uppercase tracking-wider text-white/60">
                       Email Address
@@ -331,7 +258,7 @@ export function MyLeadsPage() {
                 </thead>
                 <tbody>
                   {leads.map((lead, index) => {
-                    const statusStyle = getStatusColor(lead.status);
+                    const statusStyle = getStatusColor(!!lead.email);
                     const isHovered = hoveredRow === lead.id;
 
                     return (
@@ -360,28 +287,28 @@ export function MyLeadsPage() {
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             {isCollapsed && <User className="size-4 text-[#00D9FF]" />}
-                            <span className="text-white">{lead.name}</span>
+                            <span className="text-white">{lead.youtube_channel_name || '—'}</span>
                           </div>
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             {isCollapsed && <Building2 className="size-4 text-[#00D9FF]/60" />}
-                            <span className="text-white/70">{lead.company}</span>
+                            <span className="text-white/70">{lead.country || '—'}</span>
                           </div>
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             {isCollapsed && <Mail className="size-4 text-[#00D9FF]/60" />}
-                            <span className="text-white/60">{lead.email}</span>
+                            <span className="text-white/60">{lead.email || '—'}</span>
                           </div>
                         </td>
-                        <td className="p-4 text-white/60">{lead.sourceList}</td>
+                        <td className="p-4 text-white/60">{lead.sources.join(', ') || '—'}</td>
                         <td className="p-4">
                           <motion.span
                             whileHover={{ scale: 1.05 }}
                             className={`inline-flex px-3 py-1 rounded-full text-sm ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border} ${isHovered ? statusStyle.glow : ''} transition-all`}
                           >
-                            {getStatusLabel(lead.status)}
+                            {getStatusLabel(!!lead.email)}
                           </motion.span>
                         </td>
                         <td className="p-4">
@@ -418,7 +345,7 @@ export function MyLeadsPage() {
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-[#00D9FF]/10">
               {leads.map((lead, index) => {
-                const statusStyle = getStatusColor(lead.status);
+                const statusStyle = getStatusColor(!!lead.email);
 
                 return (
                   <motion.div
@@ -440,24 +367,24 @@ export function MyLeadsPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <User className="size-4 text-[#00D9FF]" />
-                          <span className="text-white">{lead.name}</span>
+                          <span className="text-white">{lead.youtube_channel_name || '—'}</span>
                         </div>
                         <div className="flex items-center gap-2 mb-1 text-sm">
                           <Building2 className="size-3 text-[#00D9FF]/60" />
-                          <span className="text-white/70">{lead.company}</span>
+                          <span className="text-white/70">{lead.country || '—'}</span>
                         </div>
                         <div className="flex items-center gap-2 mb-2 text-sm">
                           <Mail className="size-3 text-[#00D9FF]/60" />
-                          <span className="text-white/60 truncate">{lead.email}</span>
+                          <span className="text-white/60 truncate">{lead.email || '—'}</span>
                         </div>
                         <div className="flex items-center gap-2 mb-2">
                           <motion.span
                             whileHover={{ scale: 1.05 }}
                             className={`inline-flex px-2 py-1 rounded-full text-xs ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border}`}
                           >
-                            {getStatusLabel(lead.status)}
+                            {getStatusLabel(!!lead.email)}
                           </motion.span>
-                          <span className="text-xs text-white/40">{lead.sourceList}</span>
+                          <span className="text-xs text-white/40">{lead.sources.join(', ') || '—'}</span>
                         </div>
                         <div className="flex gap-2">
                           <motion.button
@@ -484,15 +411,22 @@ export function MyLeadsPage() {
 
             {/* Footer */}
             <div className="p-4 border-t border-[#00D9FF]/20 flex flex-col sm:flex-row items-center justify-between gap-3 backdrop-blur-xl bg-[#0A1628]/20">
-              <div className="text-sm text-white/60">Showing 1-8 of 8</div>
+              <div className="text-sm text-white/60">
+                {total === 0
+                  ? 'No leads yet'
+                  : `Showing ${(page - 1) * PAGE_SIZE + 1}-${Math.min(page * PAGE_SIZE, total)} of ${total}`}
+              </div>
               <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                {/* Export/download is a later milestone — leads can be filtered and
+                    exported once the campaign-tagging layer exists, not yet. */}
                 <motion.button
                   whileHover={{
                     scale: 1.02,
                     borderColor: 'rgba(0, 217, 255, 0.6)',
                   }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex items-center gap-2 px-4 py-2 border border-[#00D9FF]/30 rounded-lg hover:bg-[#00D9FF]/10 transition-colors text-white text-sm"
+                  disabled
+                  className="flex items-center gap-2 px-4 py-2 border border-[#00D9FF]/30 rounded-lg hover:bg-[#00D9FF]/10 transition-colors text-white text-sm opacity-40 cursor-not-allowed"
                 >
                   <Download className="size-4" />
                   <span>Download</span>
@@ -504,7 +438,9 @@ export function MyLeadsPage() {
                       borderColor: 'rgba(0, 217, 255, 0.6)',
                     }}
                     whileTap={{ scale: 0.9 }}
-                    className="p-2 border border-[#00D9FF]/30 rounded-lg hover:bg-[#00D9FF]/10 transition-colors text-white"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="p-2 border border-[#00D9FF]/30 rounded-lg hover:bg-[#00D9FF]/10 transition-colors text-white disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft className="size-4" />
                   </motion.button>
@@ -512,7 +448,7 @@ export function MyLeadsPage() {
                     whileHover={{ scale: 1.02 }}
                     className="px-4 py-2 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-white rounded-lg shadow-lg shadow-[#00D9FF]/40"
                   >
-                    1
+                    {page} / {totalPages}
                   </motion.button>
                   <motion.button
                     whileHover={{
@@ -520,13 +456,29 @@ export function MyLeadsPage() {
                       borderColor: 'rgba(0, 217, 255, 0.6)',
                     }}
                     whileTap={{ scale: 0.9 }}
-                    className="p-2 border border-[#00D9FF]/30 rounded-lg hover:bg-[#00D9FF]/10 transition-colors text-white"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="p-2 border border-[#00D9FF]/30 rounded-lg hover:bg-[#00D9FF]/10 transition-colors text-white disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <ChevronRight className="size-4" />
                   </motion.button>
                 </div>
               </div>
             </div>
+
+            {isLoading && (
+              <div className="p-8 text-center text-white/60 text-sm">Loading leads…</div>
+            )}
+            {isError && (
+              <div className="p-8 text-center text-red-400 text-sm">
+                Couldn't reach the backend — is it running?
+              </div>
+            )}
+            {!isLoading && !isError && leads.length === 0 && (
+              <div className="p-8 text-center text-white/60 text-sm">
+                No leads yet — import a CSV to get started.
+              </div>
+            )}
           </motion.div>
         </div>
       </div>
