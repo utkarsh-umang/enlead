@@ -119,9 +119,9 @@ export function SourceDetailPage() {
                 />
                 <StatCard
                   icon={MailX}
-                  label="Eligible for Email Finder"
-                  value={data.currently_without_email}
-                  sub={`of ${data.lead_count} current leads`}
+                  label="Email Finder Queue"
+                  value={data.enrichment_pending}
+                  sub={`${data.enrichment_tried_no_email.toLocaleString()} tried without luck · ${(data.currently_with_email - data.total_with_email_at_upload).toLocaleString()} found by finder`}
                   delay={0.25}
                 />
               </div>

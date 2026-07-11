@@ -156,26 +156,36 @@ export function MyLeadsPage() {
       }
     : { lead_ids: selectedLeads };
 
-  // Only two states we actually have a real signal for today: an email was
-  // found on ingestion, or it wasn't. Enrichment (email finder) isn't wired
-  // up yet — once it is, "not found" vs "not yet attempted" can split out.
-  const getStatusColor = (hasEmail: boolean) => {
-    return hasEmail
-      ? {
-          bg: 'bg-green-500/20',
-          text: 'text-green-400',
-          border: 'border-green-500/40',
-          glow: 'shadow-[0_0_15px_rgba(34,197,94,0.3)]',
-        }
-      : {
-          bg: 'bg-gray-500/20',
-          text: 'text-gray-400',
-          border: 'border-gray-500/40',
-          glow: 'shadow-[0_0_15px_rgba(107,114,128,0.3)]',
-        };
+  // Three real states now that the email finder is wired up: email present,
+  // no email but the finder already tried (amber — needs the paid tier or
+  // manual work), and not yet attempted (gray — still in the queue).
+  const getStatusColor = (lead: LeadOut) => {
+    if (lead.email) {
+      return {
+        bg: 'bg-green-500/20',
+        text: 'text-green-400',
+        border: 'border-green-500/40',
+        glow: 'shadow-[0_0_15px_rgba(34,197,94,0.3)]',
+      };
+    }
+    if (lead.email_finder_tried) {
+      return {
+        bg: 'bg-amber-500/20',
+        text: 'text-amber-400',
+        border: 'border-amber-500/40',
+        glow: 'shadow-[0_0_15px_rgba(245,158,11,0.3)]',
+      };
+    }
+    return {
+      bg: 'bg-gray-500/20',
+      text: 'text-gray-400',
+      border: 'border-gray-500/40',
+      glow: 'shadow-[0_0_15px_rgba(107,114,128,0.3)]',
+    };
   };
 
-  const getStatusLabel = (hasEmail: boolean) => (hasEmail ? 'Email Found' : 'No Email Yet');
+  const getStatusLabel = (lead: LeadOut) =>
+    lead.email ? 'Email Found' : lead.email_finder_tried ? 'Tried, Not Found' : 'No Email Yet';
 
   return (
     <div className="flex h-screen bg-[#0A1628] noise-texture">
@@ -467,7 +477,7 @@ export function MyLeadsPage() {
                 </thead>
                 <tbody>
                   {leads.map((lead, index) => {
-                    const statusStyle = getStatusColor(!!lead.email);
+                    const statusStyle = getStatusColor(lead);
                     const isHovered = hoveredRow === lead.id;
 
                     return (
@@ -517,7 +527,7 @@ export function MyLeadsPage() {
                             whileHover={{ scale: 1.05 }}
                             className={`inline-flex px-3 py-1 rounded-full text-sm ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border} ${isHovered ? statusStyle.glow : ''} transition-all`}
                           >
-                            {getStatusLabel(!!lead.email)}
+                            {getStatusLabel(lead)}
                           </motion.span>
                         </td>
                         <td className="p-4">
@@ -612,7 +622,7 @@ export function MyLeadsPage() {
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-[#00D9FF]/10">
               {leads.map((lead, index) => {
-                const statusStyle = getStatusColor(!!lead.email);
+                const statusStyle = getStatusColor(lead);
 
                 return (
                   <motion.div
@@ -649,7 +659,7 @@ export function MyLeadsPage() {
                             whileHover={{ scale: 1.05 }}
                             className={`inline-flex px-2 py-1 rounded-full text-xs ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border}`}
                           >
-                            {getStatusLabel(!!lead.email)}
+                            {getStatusLabel(lead)}
                           </motion.span>
                           <span className="text-xs text-white/40">{lead.sources.join(', ') || '—'}</span>
                         </div>

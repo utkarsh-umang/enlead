@@ -12,6 +12,8 @@ export type SourceDetail = {
     total_with_email_at_upload: number;
     currently_with_email: number;
     currently_without_email: number;
+    enrichment_tried_no_email: number;
+    enrichment_pending: number;
     batches: Array<BatchSummaryOut>;
 };
 

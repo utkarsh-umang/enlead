@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { EnrichmentAttemptOut } from '../models/EnrichmentAttemptOut';
 import type { LeadPage } from '../models/LeadPage';
 import type { LeadRawRowOut } from '../models/LeadRawRowOut';
 import type { LeadStats } from '../models/LeadStats';
@@ -66,6 +67,26 @@ export class LeadsService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/leads/{lead_id}/raw',
+            path: {
+                'lead_id': leadId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Lead Enrichment Attempts
+     * @param leadId
+     * @returns EnrichmentAttemptOut Successful Response
+     * @throws ApiError
+     */
+    public static getLeadEnrichmentAttempts(
+        leadId: string,
+    ): CancelablePromise<Array<EnrichmentAttemptOut>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/leads/{lead_id}/enrichment',
             path: {
                 'lead_id': leadId,
             },

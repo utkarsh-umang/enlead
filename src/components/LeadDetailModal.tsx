@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { LeadOut } from '@/client';
 import { useDeleteLead } from '@/hooks/api/useDeleteLead';
 import { useLeadRawRows } from '@/hooks/api/useLeadRawRows';
+import { useLeadEnrichment } from '@/hooks/api/useLeadEnrichment';
 
 interface LeadDetailModalProps {
   lead: LeadOut | null;
@@ -72,6 +73,33 @@ function RawSourceData({ leadId }: { leadId: string }) {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+function EnrichmentHistory({ leadId }: { leadId: string }) {
+  const { data: attempts } = useLeadEnrichment(leadId);
+
+  if (!attempts || attempts.length === 0) return null;
+
+  return (
+    <div className="py-2 border-b border-[#00D9FF]/10">
+      <div className="text-xs text-white/50 uppercase tracking-wider mb-1">
+        Email finder attempts ({attempts.length})
+      </div>
+      <div className="space-y-1.5 mt-1">
+        {attempts.map((a, i) => (
+          <div key={i} className="text-sm flex items-baseline justify-between gap-2">
+            <span className={a.status === 'found' ? 'text-green-400' : 'text-white/70'}>
+              {a.status === 'found' ? `found ${a.value}` : a.status.replace('_', ' ')}
+              <span className="text-white/40"> · {a.cost_mode} cost</span>
+            </span>
+            <span className="text-white/40 text-xs shrink-0">
+              {new Date(a.attempted_at).toLocaleDateString()}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -225,6 +253,7 @@ export function LeadDetailModal({ lead, onClose }: LeadDetailModalProps) {
                     </div>
                   )}
                   <Field label="Added to master table" value={new Date(lead.created_at).toLocaleString()} />
+                  <EnrichmentHistory leadId={lead.id} />
                   <Field
                     label="Last contacted (Instantly)"
                     value={

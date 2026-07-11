@@ -11,6 +11,9 @@ export type { BatchDetail } from './models/BatchDetail';
 export type { BatchSummary } from './models/BatchSummary';
 export type { BatchSummaryOut } from './models/BatchSummaryOut';
 export type { Body_upload_batch } from './models/Body_upload_batch';
+export type { EnrichmentAttemptOut } from './models/EnrichmentAttemptOut';
+export type { EnrichmentQueueItem } from './models/EnrichmentQueueItem';
+export { EnrichmentResultIn } from './models/EnrichmentResultIn';
 export type { ExportCreateIn } from './models/ExportCreateIn';
 export type { ExportPreviewOut } from './models/ExportPreviewOut';
 export type { ExportSelection } from './models/ExportSelection';
@@ -28,6 +31,7 @@ export type { SourceFileOut } from './models/SourceFileOut';
 export type { ValidationError } from './models/ValidationError';
 
 export { BatchesService } from './services/BatchesService';
+export { EnrichmentService } from './services/EnrichmentService';
 export { ExportsService } from './services/ExportsService';
 export { HealthService } from './services/HealthService';
 export { LeadsService } from './services/LeadsService';

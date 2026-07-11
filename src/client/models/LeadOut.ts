@@ -30,5 +30,6 @@ export type LeadOut = {
     sources: Array<string>;
     source_files: Array<SourceFileOut>;
     last_contacted: (string | null);
+    email_finder_tried: boolean;
 };
 
