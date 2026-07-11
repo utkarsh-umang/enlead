@@ -38,7 +38,11 @@ export function BatchDetailModal({ batchId, onClose }: BatchDetailModalProps) {
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-full max-w-3xl max-h-[85vh] overflow-y-auto backdrop-blur-xl bg-[#0A1628]/95 border border-[#00D9FF]/30 rounded-2xl shadow-2xl shadow-[#00D9FF]/20">
+            {/* maxHeight inline — static Tailwind snapshot, see LeadDetailModal */}
+            <div
+              style={{ maxHeight: '85vh' }}
+              className="w-full max-w-3xl overflow-y-auto backdrop-blur-xl bg-[#0A1628]/95 border border-[#00D9FF]/30 rounded-2xl shadow-2xl shadow-[#00D9FF]/20"
+            >
               <div className="sticky top-0 backdrop-blur-xl bg-[#0A1628]/95 p-6 border-b border-[#00D9FF]/20 flex items-center justify-between">
                 <h2 className="text-xl text-white break-all">{batch?.filename ?? 'Batch detail'}</h2>
                 <motion.button

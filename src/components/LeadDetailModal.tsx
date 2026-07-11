@@ -141,7 +141,13 @@ export function LeadDetailModal({ lead, onClose }: LeadDetailModalProps) {
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto backdrop-blur-xl bg-[#0A1628]/95 border border-[#00D9FF]/30 rounded-2xl shadow-2xl shadow-[#00D9FF]/20">
+            {/* maxHeight is inline, not max-h-[85vh]: src/index.css is a static
+                pre-generated Tailwind snapshot (no build plugin), so arbitrary
+                utilities not already in it produce no CSS at all. */}
+            <div
+              style={{ maxHeight: '85vh' }}
+              className="w-full max-w-2xl overflow-y-auto backdrop-blur-xl bg-[#0A1628]/95 border border-[#00D9FF]/30 rounded-2xl shadow-2xl shadow-[#00D9FF]/20"
+            >
               <div className="sticky top-0 backdrop-blur-xl bg-[#0A1628]/95 p-6 border-b border-[#00D9FF]/20 flex items-center justify-between">
                 <h2 className="text-xl text-white">{lead.youtube_channel_name || 'Lead detail'}</h2>
                 <div className="flex items-center gap-2">

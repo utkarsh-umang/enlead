@@ -201,7 +201,13 @@ export function DashboardPage() {
                   >
                     <div className="flex items-center gap-3">
                       <Database className="size-4 sm:size-5 text-[#00D9FF]" />
-                      <span className="text-white text-sm sm:text-base">{row.source}</span>
+                      <div>
+                        <span className="text-white text-sm sm:text-base">{row.source}</span>
+                        <div className="text-xs text-white/40 mt-0.5">
+                          {row.total_rows_uploaded.toLocaleString()} rows uploaded across{' '}
+                          {row.upload_count} {row.upload_count === 1 ? 'file' : 'files'}
+                        </div>
+                      </div>
                     </div>
                     <span className="text-[#00D9FF] text-sm sm:text-base">
                       {row.lead_count.toLocaleString()} leads

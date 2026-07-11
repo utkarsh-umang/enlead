@@ -2,10 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SourceCount = {
-    source: string;
+export type ExportOut = {
+    id: string;
+    destination: string;
+    scheduled_month: string;
     lead_count: number;
-    total_rows_uploaded: number;
-    upload_count: number;
+    created_at: string;
 };
 

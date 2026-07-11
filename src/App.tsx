@@ -4,6 +4,7 @@ import { DashboardPage } from './components/DashboardPage';
 import { MyLeadsPage } from './components/MyLeadsPage';
 import { SourceDetailPage } from './components/SourceDetailPage';
 import { MappingRegistryPage } from './components/MappingRegistryPage';
+import { ExportHistoryPage } from './components/ExportHistoryPage';
 import { SidebarProvider } from './context/SidebarContext';
 
 // Auth deferred — running locally only for now, root goes straight to the
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/my-leads" element={<MyLeadsPage />} />
           <Route path="/source/:source" element={<SourceDetailPage />} />
           <Route path="/mappings" element={<MappingRegistryPage />} />
+          <Route path="/exports" element={<ExportHistoryPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

@@ -32,9 +32,11 @@ export function useCreateExport() {
       return csv;
     },
     onSuccess: () => {
-      // last_contacted on leads and any open preview both just changed.
+      // last_contacted on leads, any open preview, and the export history
+      // page all just changed.
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       queryClient.invalidateQueries({ queryKey: ['export-preview'] });
+      queryClient.invalidateQueries({ queryKey: ['exports'] });
     },
   });
 }
