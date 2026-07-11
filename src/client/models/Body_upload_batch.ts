@@ -4,5 +4,6 @@
 /* eslint-disable */
 export type Body_upload_batch = {
     file: Blob;
+    source?: (string | null);
 };
 

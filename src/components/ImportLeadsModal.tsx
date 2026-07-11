@@ -3,6 +3,10 @@ import { X, Upload, FileText, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { ApiError } from '@/client';
 import { useUploadBatch } from '@/hooks/api/useUploadBatch';
+import { useLeadStats } from '@/hooks/api/useLeadStats';
+
+const AUTO = '__auto__';
+const NEW = '__new__';
 
 interface ImportLeadsModalProps {
   isOpen: boolean;
@@ -12,14 +16,19 @@ interface ImportLeadsModalProps {
 export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [sourceChoice, setSourceChoice] = useState(AUTO);
+  const [newSource, setNewSource] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadBatch();
+  const { data: stats } = useLeadStats();
 
   // Reset all local state whenever the modal closes, so the next open
   // starts clean instead of showing the previous run's result.
   useEffect(() => {
     if (!isOpen) {
       setSelectedFile(null);
+      setSourceChoice(AUTO);
+      setNewSource('');
       upload.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -51,9 +60,14 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
     }
   };
 
+  const resolvedSource =
+    sourceChoice === AUTO ? undefined : sourceChoice === NEW ? newSource.trim() : sourceChoice;
+  // "New source…" chosen but the name still empty → not ready to import.
+  const sourceIncomplete = sourceChoice === NEW && !newSource.trim();
+
   const handleImport = () => {
-    if (selectedFile) {
-      upload.mutate(selectedFile);
+    if (selectedFile && !sourceIncomplete) {
+      upload.mutate({ file: selectedFile, source: resolvedSource });
     }
   };
 
@@ -133,7 +147,7 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
                       </div>
                     </div>
                     <p className="text-sm text-white/60">
-                      Source detected: <span className="text-[#00D9FF]">{upload.data.source}</span>
+                      Source: <span className="text-[#00D9FF]">{upload.data.source}</span>
                     </p>
                   </div>
                 ) : (
@@ -210,10 +224,44 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
                       </div>
                     </div>
 
+                    {/* Source label: the column shape decides HOW to parse;
+                        this decides WHAT LIST it is. Two lists exported from
+                        the same tool share a shape — an explicit source keeps
+                        them distinguishable. */}
+                    <div>
+                      <label className="block text-xs text-white/60 uppercase tracking-wider mb-2">
+                        Source
+                      </label>
+                      <select
+                        value={sourceChoice}
+                        onChange={(e) => setSourceChoice(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-[#0A1628]/60 border border-[#00D9FF]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#00D9FF]"
+                      >
+                        <option value={AUTO}>Auto-detect from file shape</option>
+                        {stats?.by_source.map((s) => (
+                          <option key={s.source} value={s.source}>
+                            {s.source}
+                          </option>
+                        ))}
+                        <option value={NEW}>New source…</option>
+                      </select>
+                      {sourceChoice === NEW && (
+                        <input
+                          type="text"
+                          value={newSource}
+                          onChange={(e) => setNewSource(e.target.value)}
+                          placeholder="e.g. consulti-realestate-usa"
+                          autoFocus
+                          className="mt-2 w-full px-3 py-2.5 bg-[#0A1628]/60 border border-[#00D9FF]/30 rounded-lg text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#00D9FF]"
+                        />
+                      )}
+                    </div>
+
                     <p className="text-xs text-white/50">
-                      The source is detected automatically from the CSV's column shape — no need to
-                      label it. Unrecognized shapes aren't auto-mapped yet; you'll get an error naming
-                      what's missing.
+                      Auto-detect labels the batch from the CSV's column shape (e.g. youtube-tool /
+                      youtube-consulti). Pick or create a source when this file is a different list
+                      that happens to share a shape. Unrecognized shapes aren't auto-mapped yet;
+                      you'll get an error naming what's missing.
                     </p>
 
                     {errorMessage && (
@@ -240,7 +288,7 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
                   <motion.button
                     whileHover={{ scale: 1.02, boxShadow: '0 15px 50px rgba(0, 217, 255, 0.5)' }}
                     whileTap={{ scale: 0.98 }}
-                    disabled={!selectedFile || upload.isPending}
+                    disabled={!selectedFile || upload.isPending || sourceIncomplete}
                     onClick={handleImport}
                     className="relative px-6 py-2 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-[#0A1628] rounded-lg shadow-lg shadow-[#00D9FF]/40 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                   >
