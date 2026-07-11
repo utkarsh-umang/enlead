@@ -242,7 +242,7 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
                     whileTap={{ scale: 0.98 }}
                     disabled={!selectedFile || upload.isPending}
                     onClick={handleImport}
-                    className="relative px-6 py-2 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-white rounded-lg shadow-lg shadow-[#00D9FF]/40 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="relative px-6 py-2 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-[#0A1628] rounded-lg shadow-lg shadow-[#00D9FF]/40 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {!upload.isPending && (
                       <motion.div

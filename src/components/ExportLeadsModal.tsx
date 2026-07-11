@@ -176,7 +176,7 @@ export function ExportLeadsModal({ isOpen, onClose, selection }: ExportLeadsModa
                     whileTap={willExport > 0 ? { scale: 0.98 } : undefined}
                     onClick={handleExport}
                     disabled={willExport <= 0 || createExport.isPending}
-                    className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-white rounded-lg shadow-lg shadow-[#00D9FF]/40 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+                    className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#00D9FF] via-[#00B8D4] to-[#0099CC] text-[#0A1628] rounded-lg shadow-lg shadow-[#00D9FF]/40 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
                   >
                     {createExport.isPending ? 'Exporting…' : 'Export CSV & record'}
                   </motion.button>
