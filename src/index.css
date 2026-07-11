@@ -3999,3 +3999,32 @@ h1, h2, h3 {
   inherits: false;
   initial-value: 1;
 }
+
+/* ── Static-snapshot compatibility block ──────────────────────────────
+   src/index.css is a pre-generated Tailwind v4 snapshot (no build plugin),
+   so utilities not in the original Figma export produce NO CSS at all.
+   Classes below are used by components built after the handoff; values
+   match Tailwind's palette exactly. If you add a NEW utility class and it
+   has no visible effect, check it exists — and add it here if not.
+   (Audit script: see design-audit 2026-07-11; found via class inventory.) */
+.text-right { text-align: right; }
+.text-amber-300 { color: #fcd34d; }
+.text-amber-400 { color: #fbbf24; }
+.text-red-200 { color: #fecaca; }
+.text-red-300 { color: #fca5a5; }
+.text-red-400\/80 { color: rgba(248, 113, 113, 0.8); }
+.bg-amber-500\/10 { background-color: rgba(245, 158, 11, 0.1); }
+.bg-amber-500\/20 { background-color: rgba(245, 158, 11, 0.2); }
+.bg-red-500\/5 { background-color: rgba(239, 68, 68, 0.05); }
+.bg-red-500\/10 { background-color: rgba(239, 68, 68, 0.1); }
+.bg-red-500\/20 { background-color: rgba(239, 68, 68, 0.2); }
+.border-amber-500\/40 { border-color: rgba(245, 158, 11, 0.4); }
+.border-red-500\/30 { border-color: rgba(239, 68, 68, 0.3); }
+.border-red-500\/40 { border-color: rgba(239, 68, 68, 0.4); }
+.border-red-500\/60 { border-color: rgba(239, 68, 68, 0.6); }
+.border-white\/20 { border-color: rgba(255, 255, 255, 0.2); }
+.border-\[\#00D9FF\]\/15 { border-color: rgba(0, 217, 255, 0.15); }
+.accent-amber-400 { accent-color: #fbbf24; }
+.hover\:bg-red-500\/10:hover { background-color: rgba(239, 68, 68, 0.1); }
+.hover\:bg-red-500\/30:hover { background-color: rgba(239, 68, 68, 0.3); }
+.hover\:bg-white\/5:hover { background-color: rgba(255, 255, 255, 0.05); }
