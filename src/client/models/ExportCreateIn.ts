@@ -1,0 +1,14 @@
+/* generated using openapi-typescript-codegen -- do not edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+export type ExportCreateIn = {
+    lead_ids?: (Array<string> | null);
+    search?: (string | null);
+    source?: (string | null);
+    has_email?: (boolean | null);
+    year: number;
+    month: number;
+    include_already_exported?: boolean;
+};
+

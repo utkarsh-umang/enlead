@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Search, Filter, ChevronLeft, ChevronRight, Download, Menu, X, Mail, Building2, User, Home, Database } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { ImportLeadsModal } from './ImportLeadsModal';
+import { ExportLeadsModal } from './ExportLeadsModal';
 import { LeadDetailModal } from './LeadDetailModal';
 import { useSidebar } from '../context/SidebarContext';
 import { useEffect, useState, useRef } from 'react';
@@ -10,7 +11,7 @@ import profileImage from 'figma:asset/3a29a51f6305397b330790f22be462da5a70d304.p
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useLeads } from '../hooks/api/useLeads';
 import { useLeadStats } from '../hooks/api/useLeadStats';
-import type { LeadOut } from '@/client';
+import type { ExportSelection, LeadOut } from '@/client';
 
 const PAGE_SIZE = 25;
 
@@ -48,6 +49,13 @@ const FULL_COLUMNS: LeadColumn[] = [
   { label: 'Avg Views', render: (l) => l.youtube_avg_views?.toLocaleString() ?? '—' },
   { label: 'Last Upload', render: (l) => l.youtube_last_upload_date ?? '—' },
   { label: 'Sources', render: (l) => l.sources.join(', ') || '—' },
+  {
+    label: 'Last Contacted',
+    render: (l) =>
+      l.last_contacted
+        ? new Date(l.last_contacted).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+        : '—',
+  },
   { label: 'Added', render: (l) => new Date(l.created_at).toLocaleDateString() },
 ];
 
@@ -60,6 +68,7 @@ export function MyLeadsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sourceFilter, setSourceFilter] = useState('');
   const [hasEmailFilter, setHasEmailFilter] = useState<'' | 'true' | 'false'>('');
@@ -135,6 +144,17 @@ export function MyLeadsPage() {
     setSelectedLeads([]);
     setSelectAllMatching(false);
   };
+
+  // What the export API receives: either the explicit ids, or (in
+  // select-all-matching mode) the same filter params the table is showing —
+  // so "export what I selected" is exactly "export what I see."
+  const exportSelection: ExportSelection = selectAllMatching
+    ? {
+        search: debouncedSearch || null,
+        source: sourceFilter || null,
+        has_email: hasEmailFilter === '' ? null : hasEmailFilter === 'true',
+      }
+    : { lead_ids: selectedLeads };
 
   // Only two states we actually have a real signal for today: an email was
   // found on ingestion, or it wasn't. Enrichment (email finder) isn't wired
@@ -658,19 +678,22 @@ export function MyLeadsPage() {
                   : `Showing ${(page - 1) * PAGE_SIZE + 1}-${Math.min(page * PAGE_SIZE, total)} of ${total}`}
               </div>
               <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                {/* Export/download is a later milestone — leads can be filtered and
-                    exported once the campaign-tagging layer exists, not yet. */}
+                {/* Enabled once something is selected — exports the selection
+                    to an Instantly-shaped CSV and records the contact month. */}
                 <motion.button
-                  whileHover={{
-                    scale: 1.02,
-                    borderColor: 'rgba(0, 217, 255, 0.6)',
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  disabled
-                  className="flex items-center gap-2 px-4 py-2 border border-[#00D9FF]/30 rounded-lg hover:bg-[#00D9FF]/10 transition-colors text-white text-sm opacity-40 cursor-not-allowed"
+                  whileHover={
+                    selectedCount > 0
+                      ? { scale: 1.02, borderColor: 'rgba(0, 217, 255, 0.6)' }
+                      : undefined
+                  }
+                  whileTap={selectedCount > 0 ? { scale: 0.98 } : undefined}
+                  disabled={selectedCount === 0}
+                  onClick={() => setIsExportModalOpen(true)}
+                  title={selectedCount === 0 ? 'Select leads to export' : undefined}
+                  className="flex items-center gap-2 px-4 py-2 border border-[#00D9FF]/30 rounded-lg hover:bg-[#00D9FF]/10 transition-colors text-white text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Download className="size-4" />
-                  <span>Download</span>
+                  <span>Export to Instantly</span>
                 </motion.button>
                 <div className="flex items-center gap-2">
                   <motion.button
@@ -728,6 +751,11 @@ export function MyLeadsPage() {
       <ImportLeadsModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
+      />
+      <ExportLeadsModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        selection={exportSelection}
       />
       <LeadDetailModal lead={detailLead} onClose={() => setDetailLead(null)} />
     </div>

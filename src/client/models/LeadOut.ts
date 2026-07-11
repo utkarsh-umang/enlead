@@ -29,5 +29,6 @@ export type LeadOut = {
     created_at: string;
     sources: Array<string>;
     source_files: Array<SourceFileOut>;
+    last_contacted: (string | null);
 };
 

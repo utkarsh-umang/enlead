@@ -180,6 +180,17 @@ export function LeadDetailModal({ lead, onClose }: LeadDetailModalProps) {
                     </div>
                   )}
                   <Field label="Added to master table" value={new Date(lead.created_at).toLocaleString()} />
+                  <Field
+                    label="Last contacted (Instantly)"
+                    value={
+                      lead.last_contacted
+                        ? new Date(lead.last_contacted).toLocaleDateString(undefined, {
+                            month: 'long',
+                            year: 'numeric',
+                          })
+                        : 'Never'
+                    }
+                  />
                 </div>
               </div>
             </div>
