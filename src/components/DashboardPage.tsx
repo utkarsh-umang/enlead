@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar';
 import { AnimatedCounter } from './AnimatedCounter';
 import { ProfileOverlay } from './ProfileOverlay';
 import { ImportLeadsModal } from './ImportLeadsModal';
+import { EnrichmentStatusPanel } from './EnrichmentStatusPanel';
 import { useSidebar } from '../context/SidebarContext';
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -167,6 +168,9 @@ export function DashboardPage() {
               </div>
             </motion.div>
           </div>
+
+          {/* Email finder live status — worker state, queue, blocked banner */}
+          <EnrichmentStatusPanel />
 
           {/* Leads by Source — real batch data, not a fabricated campaign/scraping concept */}
           <motion.div
