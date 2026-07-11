@@ -3,6 +3,7 @@ import { LandingPage } from './components/LandingPage';
 import { DashboardPage } from './components/DashboardPage';
 import { MyLeadsPage } from './components/MyLeadsPage';
 import { SourceDetailPage } from './components/SourceDetailPage';
+import { MappingRegistryPage } from './components/MappingRegistryPage';
 import { SidebarProvider } from './context/SidebarContext';
 
 // Auth deferred — running locally only for now, root goes straight to the
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/my-leads" element={<MyLeadsPage />} />
           <Route path="/source/:source" element={<SourceDetailPage />} />
+          <Route path="/mappings" element={<MappingRegistryPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

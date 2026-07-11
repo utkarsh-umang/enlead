@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, Users, ChevronLeft, ChevronRight, LogOut, UserPlus, User as UserIcon, Home } from 'lucide-react';
+import { LayoutDashboard, Users, Braces, ChevronLeft, ChevronRight, LogOut, UserPlus, User as UserIcon, Home } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import profileImage from 'figma:asset/3a29a51f6305397b330790f22be462da5a70d304.png';
@@ -20,6 +20,7 @@ export function Sidebar({ isCollapsed, onToggleCollapse, isMobileMenu }: Sidebar
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'My Leads', icon: Users, path: '/my-leads' },
+    { name: 'Mappings', icon: Braces, path: '/mappings' },
   ];
 
   const handleSignOut = () => {

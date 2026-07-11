@@ -3,6 +3,7 @@ import { ArrowLeft, Upload, Layers, Mail, MailX, Menu, Home } from 'lucide-react
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { Sidebar } from './Sidebar';
+import { BatchDetailModal } from './BatchDetailModal';
 import { useSidebar } from '../context/SidebarContext';
 import { useSourceDetail } from '../hooks/api/useSourceDetail';
 import { AnimatedCounter } from './AnimatedCounter';
@@ -49,6 +50,7 @@ export function SourceDetailPage() {
   const navigate = useNavigate();
   const { isCollapsed, toggleCollapse } = useSidebar();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [detailBatchId, setDetailBatchId] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useSourceDetail(source ?? '');
 
@@ -133,6 +135,9 @@ export function SourceDetailPage() {
               >
                 <div className="p-4 sm:p-6 border-b border-[#00D9FF]/20">
                   <h2 className="text-lg sm:text-xl text-white">Upload History</h2>
+                  <p className="text-xs text-white/40 mt-1">
+                    Click a batch to see its full detail, including quarantined rows.
+                  </p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -171,7 +176,8 @@ export function SourceDetailPage() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.4 + index * 0.05 }}
-                          className="border-b border-[#00D9FF]/10 hover:bg-[#00D9FF]/5 transition-colors"
+                          onClick={() => setDetailBatchId(batch.id)}
+                          className="border-b border-[#00D9FF]/10 hover:bg-[#00D9FF]/5 transition-colors cursor-pointer"
                         >
                           <td className="p-3 sm:p-4 text-white text-sm">{batch.filename}</td>
                           <td className="p-3 sm:p-4 text-white/60 text-sm">
@@ -201,6 +207,8 @@ export function SourceDetailPage() {
           )}
         </div>
       </div>
+
+      <BatchDetailModal batchId={detailBatchId} onClose={() => setDetailBatchId(null)} />
 
       <style>{`
         .bioluminescent-text {

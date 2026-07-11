@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ExternalLink, Trash2, AlertTriangle } from 'lucide-react';
+import { X, ExternalLink, Trash2, AlertTriangle, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { LeadOut } from '@/client';
 import { useDeleteLead } from '@/hooks/api/useDeleteLead';
+import { useLeadRawRows } from '@/hooks/api/useLeadRawRows';
 
 interface LeadDetailModalProps {
   lead: LeadOut | null;
@@ -27,6 +28,50 @@ function Field({ label, value, href }: { label: string; value: string | number |
       ) : (
         <div className="text-white text-sm break-all">{value}</div>
       )}
+    </div>
+  );
+}
+
+function RawSourceData({ leadId }: { leadId: string }) {
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const { data: rawRows, isLoading } = useLeadRawRows(leadId);
+
+  if (isLoading) return <div className="text-sm text-white/40 py-2">Loading raw data…</div>;
+  if (!rawRows || rawRows.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      {rawRows.map((row, i) => (
+        <div key={i} className="border border-[#00D9FF]/15 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setExpanded(expanded === i ? null : i)}
+            className="w-full px-3 py-2 flex items-center gap-2 text-left hover:bg-[#00D9FF]/5 transition-colors"
+          >
+            {expanded === i ? (
+              <ChevronDown className="size-3.5 text-[#00D9FF] shrink-0" />
+            ) : (
+              <ChevronRight className="size-3.5 text-white/40 shrink-0" />
+            )}
+            <FileText className="size-3.5 text-white/40 shrink-0" />
+            <span className="text-sm text-white/80 break-all flex-1">{row.filename}</span>
+            <span className="text-xs text-white/40 shrink-0">row {row.row_index + 1}</span>
+          </button>
+          {expanded === i && (
+            <div className="px-3 pb-3">
+              <div className="bg-[#0A1628]/60 rounded p-3 space-y-1">
+                {Object.entries(row.raw_data).map(([key, value]) => (
+                  <div key={key} className="flex gap-3 text-xs">
+                    <span className="text-white/40 w-40 shrink-0 break-all">{key}</span>
+                    <span className="text-white/80 break-all">
+                      {value === null || value === '' ? '—' : String(value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -192,6 +237,15 @@ export function LeadDetailModal({ lead, onClose }: LeadDetailModalProps) {
                     }
                   />
                 </div>
+              </div>
+
+              {/* Full-width below the two columns: the untouched original
+                  CSV values from every file that contributed to this lead. */}
+              <div className="px-6 pb-6">
+                <h3 className="text-sm text-[#00D9FF] uppercase tracking-wider mb-3">
+                  Raw source data (as uploaded)
+                </h3>
+                <RawSourceData leadId={lead.id} />
               </div>
             </div>
           </motion.div>

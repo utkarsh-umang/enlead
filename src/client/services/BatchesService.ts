@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { BatchDetail } from '../models/BatchDetail';
 import type { BatchSummary } from '../models/BatchSummary';
 import type { Body_upload_batch } from '../models/Body_upload_batch';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -22,6 +23,26 @@ export class BatchesService {
             url: '/api/v1/batches/upload',
             formData: formData,
             mediaType: 'multipart/form-data',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Batch Detail
+     * @param batchId
+     * @returns BatchDetail Successful Response
+     * @throws ApiError
+     */
+    public static getBatchDetail(
+        batchId: string,
+    ): CancelablePromise<BatchDetail> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/batches/{batch_id}',
+            path: {
+                'batch_id': batchId,
+            },
             errors: {
                 422: `Validation Error`,
             },
