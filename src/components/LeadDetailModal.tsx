@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ExternalLink } from 'lucide-react';
+import { X, ExternalLink, Trash2, AlertTriangle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import type { LeadOut } from '@/client';
+import { useDeleteLead } from '@/hooks/api/useDeleteLead';
 
 interface LeadDetailModalProps {
   lead: LeadOut | null;
@@ -30,6 +32,23 @@ function Field({ label, value, href }: { label: string; value: string | number |
 }
 
 export function LeadDetailModal({ lead, onClose }: LeadDetailModalProps) {
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const deleteLead = useDeleteLead();
+
+  // Reset confirm state and any stale mutation result whenever a different
+  // lead opens (or the modal closes) — otherwise a leftover error/pending
+  // state from a previous delete could bleed into the next lead's view.
+  useEffect(() => {
+    setConfirmingDelete(false);
+    deleteLead.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lead?.id]);
+
+  const handleDelete = () => {
+    if (!lead) return;
+    deleteLead.mutate(lead.id, { onSuccess: onClose });
+  };
+
   return (
     <AnimatePresence>
       {lead && (
@@ -52,15 +71,57 @@ export function LeadDetailModal({ lead, onClose }: LeadDetailModalProps) {
             <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto backdrop-blur-xl bg-[#0A1628]/95 border border-[#00D9FF]/30 rounded-2xl shadow-2xl shadow-[#00D9FF]/20">
               <div className="sticky top-0 backdrop-blur-xl bg-[#0A1628]/95 p-6 border-b border-[#00D9FF]/20 flex items-center justify-between">
                 <h2 className="text-xl text-white">{lead.youtube_channel_name || 'Lead detail'}</h2>
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={onClose}
-                  className="p-2 hover:bg-[#00D9FF]/10 rounded-lg transition-colors text-white/60 hover:text-white"
-                >
-                  <X className="size-5" />
-                </motion.button>
+                <div className="flex items-center gap-2">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setConfirmingDelete(true)}
+                    className="p-2 hover:bg-red-500/10 rounded-lg transition-colors text-white/60 hover:text-red-400"
+                    title="Delete this lead"
+                  >
+                    <Trash2 className="size-5" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={onClose}
+                    className="p-2 hover:bg-[#00D9FF]/10 rounded-lg transition-colors text-white/60 hover:text-white"
+                  >
+                    <X className="size-5" />
+                  </motion.button>
+                </div>
               </div>
+
+              {confirmingDelete && (
+                <div className="p-4 mx-6 mt-6 bg-red-500/10 border border-red-500/40 rounded-lg flex items-start gap-3">
+                  <AlertTriangle className="size-5 text-red-400 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-red-300">
+                      Delete <span className="text-white">{lead.youtube_channel_name || 'this lead'}</span>{' '}
+                      permanently? This can't be undone.
+                    </p>
+                    {deleteLead.isError && (
+                      <p className="text-xs text-red-400 mt-2">Delete failed — is the backend reachable?</p>
+                    )}
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={handleDelete}
+                        disabled={deleteLead.isPending}
+                        className="px-3 py-1.5 bg-red-500/20 border border-red-500/60 text-red-300 rounded-lg text-sm hover:bg-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {deleteLead.isPending ? 'Deleting…' : 'Delete'}
+                      </button>
+                      <button
+                        onClick={() => setConfirmingDelete(false)}
+                        disabled={deleteLead.isPending}
+                        className="px-3 py-1.5 border border-white/20 text-white/70 rounded-lg text-sm hover:bg-white/5 disabled:opacity-50 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8">
                 <div>

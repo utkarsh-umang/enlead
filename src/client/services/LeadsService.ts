@@ -51,4 +51,24 @@ export class LeadsService {
             },
         });
     }
+    /**
+     * Delete Lead
+     * @param leadId
+     * @returns void
+     * @throws ApiError
+     */
+    public static deleteLead(
+        leadId: string,
+    ): CancelablePromise<void> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/leads/{lead_id}',
+            path: {
+                'lead_id': leadId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
 }
