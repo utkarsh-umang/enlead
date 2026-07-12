@@ -18,6 +18,7 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sourceChoice, setSourceChoice] = useState(AUTO);
   const [newSource, setNewSource] = useState('');
+  const [autoFindEmails, setAutoFindEmails] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadBatch();
   const { data: stats } = useLeadStats();
@@ -29,6 +30,7 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
       setSelectedFile(null);
       setSourceChoice(AUTO);
       setNewSource('');
+      setAutoFindEmails(true);
       upload.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,7 +69,7 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
 
   const handleImport = () => {
     if (selectedFile && !sourceIncomplete) {
-      upload.mutate({ file: selectedFile, source: resolvedSource });
+      upload.mutate({ file: selectedFile, source: resolvedSource, enrichmentHold: !autoFindEmails });
     }
   };
 
@@ -256,6 +258,22 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
                         />
                       )}
                     </div>
+
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={autoFindEmails}
+                        onChange={(e) => setAutoFindEmails(e.target.checked)}
+                        className="w-4 h-4 mt-0.5 accent-[#00D9FF]"
+                      />
+                      <span className="text-sm text-white/80">
+                        Find emails automatically after import
+                        <span className="block text-xs text-white/40 mt-0.5">
+                          Uncheck to hold this list out of the email finder — release it later
+                          from the source's page. Only affects leads new to the master table.
+                        </span>
+                      </span>
+                    </label>
 
                     <p className="text-xs text-white/50">
                       Auto-detect labels the batch from the CSV's column shape (e.g. youtube-tool /

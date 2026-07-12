@@ -7,8 +7,8 @@ export function useUploadBatch() {
   return useMutation({
     // source is optional: empty/undefined = auto-detect (the mapping's
     // source_label); anything else overrides the label for this batch.
-    mutationFn: ({ file, source }: { file: File; source?: string }) =>
-      BatchesService.uploadBatch({ file, source: source || null }),
+    mutationFn: ({ file, source, enrichmentHold }: { file: File; source?: string; enrichmentHold?: boolean }) =>
+      BatchesService.uploadBatch({ file, source: source || null, enrichment_hold: enrichmentHold ?? false }),
     onSuccess: () => {
       // The new/merged leads from this batch are now in master_leads —
       // whatever is showing the table needs to refetch (stats included:

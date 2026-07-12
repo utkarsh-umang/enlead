@@ -2,9 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_upload_batch = {
-    file: Blob;
-    source?: (string | null);
-    enrichment_hold?: boolean;
+export type ReleaseResult = {
+    released: number;
 };
 

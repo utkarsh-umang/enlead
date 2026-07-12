@@ -13,6 +13,7 @@ export type SourceDetail = {
     currently_with_email: number;
     currently_without_email: number;
     enrichment_tried_no_email: number;
+    enrichment_on_hold: number;
     enrichment_pending: number;
     batches: Array<BatchSummaryOut>;
 };

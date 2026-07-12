@@ -6,6 +6,7 @@ import { Sidebar } from './Sidebar';
 import { BatchDetailModal } from './BatchDetailModal';
 import { useSidebar } from '../context/SidebarContext';
 import { useSourceDetail } from '../hooks/api/useSourceDetail';
+import { useReleaseEnrichment } from '../hooks/api/useReleaseEnrichment';
 import { AnimatedCounter } from './AnimatedCounter';
 
 function StatCard({
@@ -53,6 +54,7 @@ export function SourceDetailPage() {
   const [detailBatchId, setDetailBatchId] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useSourceDetail(source ?? '');
+  const release = useReleaseEnrichment(source ?? '');
 
   return (
     <div className="flex h-screen bg-[#0A1628] noise-texture">
@@ -125,6 +127,35 @@ export function SourceDetailPage() {
                   delay={0.25}
                 />
               </div>
+
+              {/* Import-time hold: leads waiting for an explicit go-ahead */}
+              {data.enrichment_on_hold > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 sm:mb-8 p-4 bg-amber-500/10 border border-amber-500/40 rounded-2xl flex flex-col sm:flex-row sm:items-center gap-3"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm text-amber-300">
+                      {data.enrichment_on_hold.toLocaleString()} leads are on hold — imported
+                      with "find emails automatically" turned off.
+                    </p>
+                    <p className="text-xs text-white/50 mt-1">
+                      Releasing sends them to the email finder queue immediately (the worker
+                      wakes up on its own).
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => release.mutate()}
+                    disabled={release.isPending}
+                    className="px-4 py-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 rounded-lg text-sm hover:bg-amber-500/30 disabled:opacity-50 transition-colors shrink-0"
+                  >
+                    {release.isPending
+                      ? 'Releasing…'
+                      : `Send ${data.enrichment_on_hold.toLocaleString()} to Email Finder`}
+                  </button>
+                </motion.div>
+              )}
 
               {/* Upload history */}
               <motion.div

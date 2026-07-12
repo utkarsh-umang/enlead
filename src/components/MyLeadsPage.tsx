@@ -71,7 +71,7 @@ export function MyLeadsPage() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sourceFilter, setSourceFilter] = useState('');
-  const [hasEmailFilter, setHasEmailFilter] = useState<'' | 'true' | 'false'>('');
+  const [statusFilter, setStatusFilter] = useState<'' | 'found' | 'tried' | 'untried'>('');
   const [detailLead, setDetailLead] = useState<LeadOut | null>(null);
   const [viewMode, setViewMode] = useState<'compact' | 'full'>('compact');
   const profileRef = useRef<HTMLButtonElement>(null);
@@ -86,14 +86,23 @@ export function MyLeadsPage() {
   }, [searchQuery]);
 
   const { data: statsData } = useLeadStats();
+  // Status is one axis in the UI but two on the API: has_email + finder_tried.
+  const statusParams =
+    statusFilter === 'found'
+      ? { hasEmail: true }
+      : statusFilter === 'tried'
+        ? { hasEmail: false, finderTried: true }
+        : statusFilter === 'untried'
+          ? { hasEmail: false, finderTried: false }
+          : {};
   const { data, isLoading, isError } = useLeads(page, PAGE_SIZE, debouncedSearch, {
     source: sourceFilter || undefined,
-    hasEmail: hasEmailFilter === '' ? undefined : hasEmailFilter === 'true',
+    ...statusParams,
   });
   const leads = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const activeFilterCount = (sourceFilter ? 1 : 0) + (hasEmailFilter ? 1 : 0);
+  const activeFilterCount = (sourceFilter ? 1 : 0) + (statusFilter ? 1 : 0);
   const navigate = useNavigate();
 
   // "Select all matching filter" spans every page, not just what's loaded —
@@ -111,7 +120,7 @@ export function MyLeadsPage() {
     setSelectedLeads([]);
     setSelectAllMatching(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, sourceFilter, hasEmailFilter]);
+  }, [debouncedSearch, sourceFilter, statusFilter]);
 
   const toggleLead = (id: string) => {
     if (selectAllMatching) {
@@ -152,7 +161,9 @@ export function MyLeadsPage() {
     ? {
         search: debouncedSearch || null,
         source: sourceFilter || null,
-        has_email: hasEmailFilter === '' ? null : hasEmailFilter === 'true',
+        // export cares about the email axis only; the finder-tried axis
+        // never changes what's exportable (no-email leads are skipped).
+        has_email: statusFilter === 'found' ? true : statusFilter === '' ? null : false,
       }
     : { lead_ids: selectedLeads };
 
@@ -360,23 +371,24 @@ export function MyLeadsPage() {
                       <div>
                         <label className="block text-xs text-white/60 uppercase tracking-wider mb-2">Status</label>
                         <select
-                          value={hasEmailFilter}
+                          value={statusFilter}
                           onChange={(e) => {
-                            setHasEmailFilter(e.target.value as '' | 'true' | 'false');
+                            setStatusFilter(e.target.value as '' | 'found' | 'tried' | 'untried');
                             setPage(1);
                           }}
                           className="w-full px-3 py-2 bg-[#0A1628]/60 border border-[#00D9FF]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#00D9FF]"
                         >
                           <option value="">All statuses</option>
-                          <option value="true">Email Found</option>
-                          <option value="false">No Email Yet</option>
+                          <option value="found">Email Found</option>
+                          <option value="tried">Tried, Not Found</option>
+                          <option value="untried">No Email Yet (not tried)</option>
                         </select>
                       </div>
                       {activeFilterCount > 0 && (
                         <button
                           onClick={() => {
                             setSourceFilter('');
-                            setHasEmailFilter('');
+                            setStatusFilter('');
                             setPage(1);
                           }}
                           className="text-xs text-[#00D9FF] hover:underline"

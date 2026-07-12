@@ -31,6 +31,7 @@ export type { LeadStats } from './models/LeadStats';
 export type { MappingFunctionOut } from './models/MappingFunctionOut';
 export type { PauseIn } from './models/PauseIn';
 export type { QuarantinedRowOut } from './models/QuarantinedRowOut';
+export type { ReleaseResult } from './models/ReleaseResult';
 export type { SourceCount } from './models/SourceCount';
 export type { SourceDetail } from './models/SourceDetail';
 export type { SourceFileOut } from './models/SourceFileOut';
