@@ -2469,6 +2469,10 @@
     --tw-shadow-color: #00d9ff1a;
   }
 
+  .shadow-amber-500\/10 {
+    --tw-shadow-color: #f59e0b1a;
+  }
+
   @supports (color: color-mix(in lab, red, red)) {
     .shadow-\[\#00D9FF\]\/10 {
       --tw-shadow-color: color-mix(in oklab, oklab(81.5968% -.116812 -.0864434 / .1) var(--tw-shadow-alpha), transparent);
@@ -4014,6 +4018,7 @@ h1, h2, h3 {
 .text-red-300 { color: #fca5a5; }
 .text-red-400\/80 { color: rgba(248, 113, 113, 0.8); }
 .text-violet-300 { color: #c4b5fd; }
+.text-amber-400\/60 { color: rgba(251, 191, 36, 0.6); }
 .bg-amber-500\/10 { background-color: rgba(245, 158, 11, 0.1); }
 .bg-amber-500\/20 { background-color: rgba(245, 158, 11, 0.2); }
 .bg-red-500\/5 { background-color: rgba(239, 68, 68, 0.05); }

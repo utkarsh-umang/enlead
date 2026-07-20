@@ -7,6 +7,7 @@ export type LeadStats = {
     total: number;
     with_email: number;
     without_email: number;
+    contactable_never_contacted: number;
     by_source: Array<SourceCount>;
 };
 

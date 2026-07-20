@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ApiError } from '@/client';
 import { useUploadBatch } from '@/hooks/api/useUploadBatch';
 import { useLeadStats } from '@/hooks/api/useLeadStats';
+import { MONTHS, campaignYears } from '@/lib/months';
 
 const AUTO = '__auto__';
 const NEW = '__new__';
@@ -19,6 +20,13 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
   const [sourceChoice, setSourceChoice] = useState(AUTO);
   const [newSource, setNewSource] = useState('');
   const [autoFindEmails, setAutoFindEmails] = useState(true);
+  // "This list was already sent on Instantly" — campaigns that started
+  // outside LMS. Defaults to the current month, which is what someone
+  // ticking this box almost always means.
+  const [alreadyContacted, setAlreadyContacted] = useState(false);
+  const now = new Date();
+  const [contactedMonth, setContactedMonth] = useState(now.getMonth() + 1);
+  const [contactedYear, setContactedYear] = useState(now.getFullYear());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadBatch();
   const { data: stats } = useLeadStats();
@@ -31,6 +39,7 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
       setSourceChoice(AUTO);
       setNewSource('');
       setAutoFindEmails(true);
+      setAlreadyContacted(false);
       upload.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -69,7 +78,13 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
 
   const handleImport = () => {
     if (selectedFile && !sourceIncomplete) {
-      upload.mutate({ file: selectedFile, source: resolvedSource, enrichmentHold: !autoFindEmails });
+      upload.mutate({
+        file: selectedFile,
+        source: resolvedSource,
+        enrichmentHold: !autoFindEmails,
+        alreadyContactedYear: alreadyContacted ? contactedYear : undefined,
+        alreadyContactedMonth: alreadyContacted ? contactedMonth : undefined,
+      });
     }
   };
 
@@ -274,6 +289,52 @@ export function ImportLeadsModal({ isOpen, onClose }: ImportLeadsModalProps) {
                         </span>
                       </span>
                     </label>
+
+                    <div>
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={alreadyContacted}
+                          onChange={(e) => setAlreadyContacted(e.target.checked)}
+                          className="w-4 h-4 mt-0.5 accent-[#00D9FF]"
+                        />
+                        <span className="text-sm text-white/80">
+                          This list was already sent or scheduled on Instantly
+                          <span className="block text-xs text-white/40 mt-0.5">
+                            Records the contact event now, so these leads don't show up as
+                            still-to-contact. Only leads that arrive with an email are marked —
+                            Instantly never received the rest.
+                          </span>
+                        </span>
+                      </label>
+
+                      {alreadyContacted && (
+                        <div className="mt-3 ml-7 flex gap-2">
+                          <select
+                            value={contactedMonth}
+                            onChange={(e) => setContactedMonth(Number(e.target.value))}
+                            className="flex-1 px-3 py-2 bg-[#0A1628]/60 border border-[#00D9FF]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#00D9FF]"
+                          >
+                            {MONTHS.map((label, i) => (
+                              <option key={label} value={i + 1}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                          <select
+                            value={contactedYear}
+                            onChange={(e) => setContactedYear(Number(e.target.value))}
+                            className="w-32 px-3 py-2 bg-[#0A1628]/60 border border-[#00D9FF]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#00D9FF]"
+                          >
+                            {campaignYears().map((y) => (
+                              <option key={y} value={y}>
+                                {y}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
 
                     <p className="text-xs text-white/50">
                       Auto-detect labels the batch from the CSV's column shape (e.g. youtube-tool /

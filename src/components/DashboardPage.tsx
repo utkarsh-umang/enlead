@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Plus, Database, Menu, Home, Mail, Users, Layers } from 'lucide-react';
+import { Plus, Database, Menu, Home, Mail, Users, Layers, Send } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { AnimatedCounter } from './AnimatedCounter';
 import { ProfileOverlay } from './ProfileOverlay';
@@ -102,7 +102,7 @@ export function DashboardPage() {
           )}
 
           {/* Stats Row — real counts from master_leads, nothing fabricated */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -145,6 +145,39 @@ export function DashboardPage() {
                 {isLoading || !stats
                   ? ''
                   : `${Math.round((stats.with_email / Math.max(stats.total, 1)) * 100)}% of total`}
+              </div>
+            </motion.div>
+
+            {/* The working pipeline: reachable and not yet emailed. Amber,
+                not cyan — this is the number that means "there is work to
+                do", and it should read differently from the inventory
+                counts either side of it. */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              whileHover={{
+                y: -4,
+                boxShadow: '0 20px 40px rgba(245, 158, 11, 0.25)',
+                borderColor: 'rgba(245, 158, 11, 0.6)',
+              }}
+              className="backdrop-blur-xl bg-[#0A1628]/40 border border-amber-500/40 rounded-2xl p-4 sm:p-6 shadow-lg shadow-amber-500/10"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Send className="size-4 text-amber-400/60" />
+                <div className="text-xs sm:text-sm text-white/60">Not Yet Contacted</div>
+              </div>
+              <div className="text-2xl sm:text-3xl text-amber-400">
+                {isLoading ? (
+                  '—'
+                ) : (
+                  <AnimatedCounter value={stats?.contactable_never_contacted ?? 0} delay={0.4} />
+                )}
+              </div>
+              <div className="text-xs sm:text-sm text-white/40 mt-1">
+                {isLoading || !stats
+                  ? ''
+                  : `of ${stats.with_email.toLocaleString()} with an email`}
               </div>
             </motion.div>
 

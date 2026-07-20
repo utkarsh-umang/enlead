@@ -12,5 +12,6 @@ export type ExportSelection = {
     search?: (string | null);
     source?: (string | null);
     has_email?: (boolean | null);
+    email_from_finder?: (boolean | null);
 };
 

@@ -10,10 +10,7 @@ interface ExportLeadsModalProps {
   selection: ExportSelection;
 }
 
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
+import { MONTHS } from '@/lib/months';
 
 export function ExportLeadsModal({ isOpen, onClose, selection }: ExportLeadsModalProps) {
   const now = new Date();

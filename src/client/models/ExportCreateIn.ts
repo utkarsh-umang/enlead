@@ -7,6 +7,7 @@ export type ExportCreateIn = {
     search?: (string | null);
     source?: (string | null);
     has_email?: (boolean | null);
+    email_from_finder?: (boolean | null);
     year: number;
     month: number;
     include_already_exported?: boolean;
