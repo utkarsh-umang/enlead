@@ -29,6 +29,7 @@ export class LeadsService {
      * @param source
      * @param hasEmail
      * @param finderTried
+     * @param emailFromFinder
      * @returns LeadPage Successful Response
      * @throws ApiError
      */
@@ -39,6 +40,7 @@ export class LeadsService {
         source?: (string | null),
         hasEmail?: (boolean | null),
         finderTried?: (boolean | null),
+        emailFromFinder?: (boolean | null),
     ): CancelablePromise<LeadPage> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -50,6 +52,7 @@ export class LeadsService {
                 'source': source,
                 'has_email': hasEmail,
                 'finder_tried': finderTried,
+                'email_from_finder': emailFromFinder,
             },
             errors: {
                 422: `Validation Error`,

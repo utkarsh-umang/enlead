@@ -81,7 +81,7 @@ export function MyLeadsPage() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sourceFilter, setSourceFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'' | 'found' | 'tried' | 'untried'>('');
+  const [statusFilter, setStatusFilter] = useState<'' | 'present' | 'found' | 'tried' | 'untried'>('');
   const [detailLead, setDetailLead] = useState<LeadOut | null>(null);
   const [viewMode, setViewMode] = useState<'compact' | 'full'>('compact');
   const profileRef = useRef<HTMLButtonElement>(null);
@@ -96,15 +96,19 @@ export function MyLeadsPage() {
   }, [searchQuery]);
 
   const { data: statsData } = useLeadStats();
-  // Status is one axis in the UI but two on the API: has_email + finder_tried.
+  // Status is one axis in the UI but three on the API: has_email splits
+  // present-vs-absent, email_from_finder splits who earned it, and
+  // finder_tried splits the no-email side into attempted vs queued.
   const statusParams =
-    statusFilter === 'found'
-      ? { hasEmail: true }
-      : statusFilter === 'tried'
-        ? { hasEmail: false, finderTried: true }
-        : statusFilter === 'untried'
-          ? { hasEmail: false, finderTried: false }
-          : {};
+    statusFilter === 'present'
+      ? { hasEmail: true, emailFromFinder: false }
+      : statusFilter === 'found'
+        ? { hasEmail: true, emailFromFinder: true }
+        : statusFilter === 'tried'
+          ? { hasEmail: false, finderTried: true }
+          : statusFilter === 'untried'
+            ? { hasEmail: false, finderTried: false }
+            : {};
   const { data, isLoading, isError } = useLeads(page, PAGE_SIZE, debouncedSearch, {
     source: sourceFilter || undefined,
     ...statusParams,
@@ -173,21 +177,41 @@ export function MyLeadsPage() {
         source: sourceFilter || null,
         // export cares about the email axis only; the finder-tried axis
         // never changes what's exportable (no-email leads are skipped).
-        has_email: statusFilter === 'found' ? true : statusFilter === '' ? null : false,
+        has_email:
+          statusFilter === 'found' || statusFilter === 'present'
+            ? true
+            : statusFilter === ''
+              ? null
+              : false,
       }
     : { lead_ids: selectedLeads };
 
-  // Three real states now that the email finder is wired up: email present,
-  // no email but the finder already tried (amber — needs the paid tier or
-  // manual work), and not yet attempted (gray — still in the queue).
+  // Four real states. "Email present" and "Email found" both mean the lead
+  // has an email, but only the second one was earned by the finder — the
+  // enricher always stamps email_source='email_finder'. Worth separating:
+  // ~92% of leads with an email simply came that way in the CSV, so one
+  // combined pill made the finder's actual wins invisible (and claimed
+  // credit for work it never did).
+  const isFinderEmail = (lead: LeadOut) => lead.email_source === 'email_finder';
+
   const getStatusColor = (lead: LeadOut) => {
     if (lead.email) {
-      return {
-        bg: 'bg-green-500/20',
-        text: 'text-green-400',
-        border: 'border-green-500/40',
-        glow: 'shadow-[0_0_15px_rgba(34,197,94,0.3)]',
-      };
+      // Violet for finder wins: distinct from the green "came with the
+      // list" majority, and deliberately NOT the cyan accent — cyan is
+      // this UI's interactive colour, so a cyan pill reads as clickable.
+      return isFinderEmail(lead)
+        ? {
+            bg: 'bg-violet-500/20',
+            text: 'text-violet-300',
+            border: 'border-violet-500/40',
+            glow: 'shadow-[0_0_15px_rgba(139,92,246,0.3)]',
+          }
+        : {
+            bg: 'bg-green-500/20',
+            text: 'text-green-400',
+            border: 'border-green-500/40',
+            glow: 'shadow-[0_0_15px_rgba(34,197,94,0.3)]',
+          };
     }
     if (lead.email_finder_tried) {
       return {
@@ -206,7 +230,13 @@ export function MyLeadsPage() {
   };
 
   const getStatusLabel = (lead: LeadOut) =>
-    lead.email ? 'Email Found' : lead.email_finder_tried ? 'Tried, Not Found' : 'No Email Yet';
+    lead.email
+      ? isFinderEmail(lead)
+        ? 'Email Found'
+        : 'Email Present'
+      : lead.email_finder_tried
+        ? 'Tried, Not Found'
+        : 'No Email Yet';
 
   return (
     <div className="flex h-screen bg-[#0A1628] noise-texture">
@@ -383,13 +413,14 @@ export function MyLeadsPage() {
                         <select
                           value={statusFilter}
                           onChange={(e) => {
-                            setStatusFilter(e.target.value as '' | 'found' | 'tried' | 'untried');
+                            setStatusFilter(e.target.value as '' | 'present' | 'found' | 'tried' | 'untried');
                             setPage(1);
                           }}
                           className="w-full px-3 py-2 bg-[#0A1628]/60 border border-[#00D9FF]/30 rounded-lg text-white text-sm focus:outline-none focus:border-[#00D9FF]"
                         >
                           <option value="">All statuses</option>
-                          <option value="found">Email Found</option>
+                          <option value="present">Email Present (from the list)</option>
+                          <option value="found">Email Found (by the finder)</option>
                           <option value="tried">Tried, Not Found</option>
                           <option value="untried">No Email Yet (not tried)</option>
                         </select>
