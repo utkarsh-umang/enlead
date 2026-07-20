@@ -19,5 +19,9 @@ export type EnrichmentStatusOut = {
     attempts_last_hour: number;
     attempts_today: number;
     found_today: number;
+    attempts_total: number;
+    found_total: number;
+    cost_today_usd: number;
+    cost_total_usd: number;
 };
 

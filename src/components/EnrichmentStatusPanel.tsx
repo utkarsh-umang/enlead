@@ -2,6 +2,12 @@ import { motion } from 'motion/react';
 import { Bot, AlertOctagon, CheckCircle2, Loader2, MoonStar } from 'lucide-react';
 import { useEnrichmentStatus, useResumeEnrichment } from '../hooks/api/useEnrichmentStatus';
 
+function fmtUsd(v: number): string {
+  if (v === 0) return '$0';
+  if (v < 0.01) return '<$0.01';
+  return `$${v.toFixed(2)}`;
+}
+
 function timeAgo(iso: string): string {
   const s = Math.max(0, (Date.now() - new Date(iso + 'Z').getTime()) / 1000);
   if (s < 60) return `${Math.round(s)}s ago`;
@@ -32,22 +38,34 @@ export function EnrichmentStatusPanel() {
       transition={{ delay: 0.35 }}
       className="backdrop-blur-xl bg-[#0A1628]/40 border border-[#00D9FF]/30 rounded-2xl shadow-lg shadow-[#00D9FF]/10 overflow-hidden mb-6 sm:mb-8"
     >
-      <div className="p-4 sm:p-6 border-b border-[#00D9FF]/20 flex items-center gap-3">
+      <div className="p-4 sm:p-6 border-b border-[#00D9FF]/20 flex flex-wrap items-center gap-3">
         <Bot className="size-5 text-[#00D9FF]" />
         <h2 className="text-lg sm:text-xl text-white flex-1">Email Finder</h2>
-        {active && (
-          <span className="flex items-center gap-2 text-sm text-[#00D9FF]">
-            <Loader2 className="size-4 animate-spin" /> active
+
+        {/* Spend + worker status live in the header, left of the queue badge */}
+        <span className="flex items-center gap-1.5 text-sm text-amber-400">
+          {fmtUsd(st.cost_today_usd)} today
+          <span className="text-xs text-white/40">· {fmtUsd(st.cost_total_usd)} all-time</span>
+        </span>
+
+        {st.worker_alive ? (
+          <span className="flex items-center gap-1.5 text-sm text-white/60">
+            {active && <Loader2 className="size-4 animate-spin text-[#00D9FF]" />}
+            {st.worker_state ?? '—'}
+            {st.worker_in_flight > 0 && ` · ${st.worker_in_flight} in flight`}
+            {st.worker_last_seen_at && (
+              <span className="text-xs text-white/40">· seen {timeAgo(st.worker_last_seen_at)}</span>
+            )}
+          </span>
+        ) : (
+          <span className="flex items-center gap-1.5 text-sm text-white/50">
+            <MoonStar className="size-4" /> worker offline
           </span>
         )}
+
         {idle && st.pending_low === 0 && (
           <span className="flex items-center gap-2 text-sm text-green-400">
             <CheckCircle2 className="size-4" /> queue empty
-          </span>
-        )}
-        {idle && st.pending_low > 0 && !st.worker_alive && (
-          <span className="flex items-center gap-2 text-sm text-white/50">
-            <MoonStar className="size-4" /> worker not running
           </span>
         )}
       </div>
@@ -93,18 +111,20 @@ export function EnrichmentStatusPanel() {
         <div>
           <div className="text-xs text-white/50 uppercase tracking-wider mb-1">Found today</div>
           <div className="text-xl text-green-400">{st.found_today.toLocaleString()}</div>
-        </div>
-        <div>
-          <div className="text-xs text-white/50 uppercase tracking-wider mb-1">Worker</div>
-          <div className="text-sm text-white mt-1">
-            {st.worker_alive ? (st.worker_state ?? '—') : 'offline'}
-            {st.worker_in_flight > 0 && st.worker_alive && ` · ${st.worker_in_flight} in flight`}
-          </div>
-          {st.worker_last_seen_at && (
+          {st.attempts_today > 0 && (
             <div className="text-xs text-white/40 mt-0.5">
-              last seen {timeAgo(st.worker_last_seen_at)}
+              {Math.round((st.found_today / st.attempts_today) * 100)}% of tried
             </div>
           )}
+        </div>
+        <div>
+          <div className="text-xs text-white/50 uppercase tracking-wider mb-1">Found rate</div>
+          <div className="text-xl text-green-400">
+            {st.attempts_total > 0 ? `${Math.round((st.found_total / st.attempts_total) * 100)}%` : '—'}
+          </div>
+          <div className="text-xs text-white/40 mt-0.5">
+            {st.found_total.toLocaleString()} of {st.attempts_total.toLocaleString()} all-time
+          </div>
         </div>
       </div>
 
