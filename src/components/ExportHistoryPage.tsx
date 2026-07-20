@@ -20,14 +20,14 @@ function ExportLeadsList({ exportId }: { exportId: string }) {
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#00D9FF]/15 bg-[#0A1628]/60">
-              <th className="text-left p-3 text-xs uppercase tracking-wider text-white/50">Channel</th>
+              <th className="text-left p-3 text-xs uppercase tracking-wider text-white/50">Name</th>
               <th className="text-left p-3 text-xs uppercase tracking-wider text-white/50">Email</th>
             </tr>
           </thead>
           <tbody>
             {data.items.map((lead) => (
               <tr key={lead.lead_id} className="border-b border-[#00D9FF]/10 last:border-0">
-                <td className="p-3 text-white/90 text-sm">{lead.youtube_channel_name ?? '—'}</td>
+                <td className="p-3 text-white/90 text-sm">{lead.display_name ?? '—'}</td>
                 <td className="p-3 text-white/60 text-sm break-all">{lead.email ?? '—'}</td>
               </tr>
             ))}

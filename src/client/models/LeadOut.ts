@@ -18,6 +18,14 @@ export type LeadOut = {
     country: (string | null);
     niche: (string | null);
     category: (string | null);
+    industry: (string | null);
+    first_name: (string | null);
+    last_name: (string | null);
+    job_title: (string | null);
+    seniority: (string | null);
+    phone: (string | null);
+    company_name: (string | null);
+    company_linkedin: (string | null);
     youtube_channel_name: (string | null);
     youtube_channel_id: (string | null);
     youtube_handle: (string | null);

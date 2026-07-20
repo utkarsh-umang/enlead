@@ -4,7 +4,7 @@
 /* eslint-disable */
 export type ExportLeadItem = {
     lead_id: string;
-    youtube_channel_name: (string | null);
+    display_name: (string | null);
     email: (string | null);
 };
 

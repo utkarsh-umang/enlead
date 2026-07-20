@@ -11,6 +11,7 @@ import profileImage from 'figma:asset/3a29a51f6305397b330790f22be462da5a70d304.p
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useLeads } from '../hooks/api/useLeads';
 import { useLeadStats } from '../hooks/api/useLeadStats';
+import { leadDisplayName } from '@/lib/leadDisplayName';
 import type { ExportSelection, LeadOut } from '@/client';
 
 const PAGE_SIZE = 25;
@@ -24,6 +25,15 @@ interface LeadColumn {
 }
 
 const FULL_COLUMNS: LeadColumn[] = [
+  { label: 'Name', render: (l) => leadDisplayName(l) ?? '—' },
+  { label: 'First Name', render: (l) => l.first_name ?? '—' },
+  { label: 'Last Name', render: (l) => l.last_name ?? '—' },
+  { label: 'Job Title', render: (l) => l.job_title ?? '—' },
+  { label: 'Seniority', render: (l) => l.seniority ?? '—' },
+  { label: 'Company', render: (l) => l.company_name ?? '—' },
+  { label: 'Company LinkedIn', render: (l) => l.company_linkedin ?? '—' },
+  { label: 'Phone', render: (l) => l.phone ?? '—' },
+  { label: 'Industry', render: (l) => l.industry ?? '—' },
   { label: 'Channel Name', render: (l) => l.youtube_channel_name ?? '—' },
   { label: 'Handle', render: (l) => l.youtube_handle ?? '—' },
   { label: 'Channel ID', render: (l) => l.youtube_channel_id ?? '—' },
@@ -468,7 +478,7 @@ export function MyLeadsPage() {
                       />
                     </th>
                     <th className="text-left p-4 text-xs uppercase tracking-wider text-white/60">
-                      Channel Name
+                      Name
                     </th>
                     <th className="text-left p-4 text-xs uppercase tracking-wider text-white/60">
                       Country
@@ -518,7 +528,7 @@ export function MyLeadsPage() {
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             {isCollapsed && <User className="size-4 text-[#00D9FF]" />}
-                            <span className="text-white">{lead.youtube_channel_name || '—'}</span>
+                            <span className="text-white">{leadDisplayName(lead) || '—'}</span>
                           </div>
                         </td>
                         <td className="p-4">
@@ -656,7 +666,7 @@ export function MyLeadsPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <User className="size-4 text-[#00D9FF]" />
-                          <span className="text-white">{lead.youtube_channel_name || '—'}</span>
+                          <span className="text-white">{leadDisplayName(lead) || '—'}</span>
                         </div>
                         <div className="flex items-center gap-2 mb-1 text-sm">
                           <Building2 className="size-3 text-[#00D9FF]/60" />

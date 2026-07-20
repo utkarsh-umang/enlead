@@ -5,6 +5,7 @@ import type { LeadOut } from '@/client';
 import { useDeleteLead } from '@/hooks/api/useDeleteLead';
 import { useLeadRawRows } from '@/hooks/api/useLeadRawRows';
 import { useLeadEnrichment } from '@/hooks/api/useLeadEnrichment';
+import { leadDisplayName } from '@/lib/leadDisplayName';
 
 interface LeadDetailModalProps {
   lead: LeadOut | null;
@@ -122,6 +123,14 @@ export function LeadDetailModal({ lead, onClose }: LeadDetailModalProps) {
     deleteLead.mutate(lead.id, { onSuccess: onClose });
   };
 
+  // Which identity sections this lead actually has data for. A lead can in
+  // principle be both (a merge across source kinds), so these aren't
+  // mutually exclusive.
+  const isYouTubeLead = Boolean(
+    lead?.youtube_channel_name || lead?.youtube_handle || lead?.youtube_channel_id,
+  );
+  const isPersonLead = Boolean(lead?.first_name || lead?.last_name || lead?.company_name);
+
   return (
     <AnimatePresence>
       {lead && (
@@ -149,7 +158,7 @@ export function LeadDetailModal({ lead, onClose }: LeadDetailModalProps) {
               className="w-full max-w-2xl overflow-y-auto backdrop-blur-xl bg-[#0A1628]/95 border border-[#00D9FF]/30 rounded-2xl shadow-2xl shadow-[#00D9FF]/20"
             >
               <div className="sticky top-0 backdrop-blur-xl bg-[#0A1628]/95 p-6 border-b border-[#00D9FF]/20 flex items-center justify-between">
-                <h2 className="text-xl text-white">{lead.youtube_channel_name || 'Lead detail'}</h2>
+                <h2 className="text-xl text-white">{leadDisplayName(lead) || 'Lead detail'}</h2>
                 <div className="flex items-center gap-2">
                   <motion.button
                     whileHover={{ scale: 1.1 }}
@@ -176,7 +185,7 @@ export function LeadDetailModal({ lead, onClose }: LeadDetailModalProps) {
                   <AlertTriangle className="size-5 text-red-400 shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm text-red-300">
-                      Delete <span className="text-white">{lead.youtube_channel_name || 'this lead'}</span>{' '}
+                      Delete <span className="text-white">{leadDisplayName(lead) || 'this lead'}</span>{' '}
                       permanently? This can't be undone.
                     </p>
                     {deleteLead.isError && (
@@ -223,18 +232,42 @@ export function LeadDetailModal({ lead, onClose }: LeadDetailModalProps) {
                 </div>
 
                 <div>
-                  <h3 className="text-sm text-[#00D9FF] uppercase tracking-wider mb-2 mt-2">YouTube identity</h3>
-                  <Field label="Channel name" value={lead.youtube_channel_name} />
-                  <Field label="Handle" value={lead.youtube_handle} />
-                  <Field label="Channel ID" value={lead.youtube_channel_id} />
-                  <Field label="Subscribers" value={lead.youtube_subscriber_count?.toLocaleString() ?? null} />
-                  <Field label="Videos" value={lead.youtube_video_count?.toLocaleString() ?? null} />
-                  <Field label="Uploads (last 30d)" value={lead.youtube_uploads_last_30d} />
-                  <Field label="Avg views" value={lead.youtube_avg_views?.toLocaleString() ?? null} />
-                  <Field label="Last upload" value={lead.youtube_last_upload_date} />
+                  {/* A lead is either YouTube-native or person-centric — showing
+                      the empty section for the other kind is just noise. */}
+                  {isYouTubeLead && (
+                    <>
+                      <h3 className="text-sm text-[#00D9FF] uppercase tracking-wider mb-2 mt-2">
+                        YouTube identity
+                      </h3>
+                      <Field label="Channel name" value={lead.youtube_channel_name} />
+                      <Field label="Handle" value={lead.youtube_handle} />
+                      <Field label="Channel ID" value={lead.youtube_channel_id} />
+                      <Field label="Subscribers" value={lead.youtube_subscriber_count?.toLocaleString() ?? null} />
+                      <Field label="Videos" value={lead.youtube_video_count?.toLocaleString() ?? null} />
+                      <Field label="Uploads (last 30d)" value={lead.youtube_uploads_last_30d} />
+                      <Field label="Avg views" value={lead.youtube_avg_views?.toLocaleString() ?? null} />
+                      <Field label="Last upload" value={lead.youtube_last_upload_date} />
+                    </>
+                  )}
+
+                  {isPersonLead && (
+                    <>
+                      <h3 className="text-sm text-[#00D9FF] uppercase tracking-wider mb-2 mt-2">Person</h3>
+                      <Field label="First name" value={lead.first_name} />
+                      <Field label="Last name" value={lead.last_name} />
+                      <Field label="Job title" value={lead.job_title} />
+                      <Field label="Seniority" value={lead.seniority} />
+
+                      <h3 className="text-sm text-[#00D9FF] uppercase tracking-wider mb-2 mt-6">Company</h3>
+                      <Field label="Company" value={lead.company_name} />
+                      <Field label="Company LinkedIn" value={lead.company_linkedin} href />
+                      <Field label="Phone" value={lead.phone} />
+                    </>
+                  )}
 
                   <h3 className="text-sm text-[#00D9FF] uppercase tracking-wider mb-2 mt-6">Categorization</h3>
                   <Field label="Country" value={lead.country} />
+                  <Field label="Industry" value={lead.industry} />
                   <Field label="Niche" value={lead.niche} />
                   <Field label="Category" value={lead.category} />
 
